@@ -26,4 +26,18 @@
 - Rithik Agarwal
 - Aastha Jha
 
+## Developer's note
+Compile the filesystem binsary
+```sh
+g++ -std=c++17 main.cpp -o fileserver -lssl -lcrypto
+```
+
+Enter the file system
+```sh
+./filesystem <your_admin_name>
+```
+
+Press ctrl + C to exit the file system. 
+
+
 Works are tracked at [Trello](https://trello.com/b/GKl7tSmP/cmpt785-bibifi).
