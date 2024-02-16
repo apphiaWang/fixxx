@@ -6,11 +6,12 @@
 #include <vector>
 #include <sstream>
 #include "commands.h"
+#include "fileUtils.h"
 #include "stringUtils.h"
-#include "systemUtils.h"
 #include "userUtils.h"
 
 #define USERNAME_MAX_LEN 20
+
 
 /* 
 Display current user name and current directory. Wait for user to enter command.
@@ -34,8 +35,20 @@ void prompt()
             pwd();
         }
         else 
-        {
-            std::cout << "Invalid command." << std::endl;
+        { // commands with arguments
+            std::vector<std::string> args = split(cmd, ' ');
+
+            if (args[0] == "cd") 
+            {
+                if (args.size() != 2) 
+                {
+                    std::cout << "invalid argument, check user manual" << std::endl;
+                }
+                cd(args[1]);
+            }
+            else {
+                std::cout << "Invalid command" << std::endl;
+            }
         }
     }
 }
@@ -54,6 +67,7 @@ int main(int argc, char* argv[])
     } else {
         initSystemRoot();
         addUser(argv[1], true);
+        isAdmin = true;
     }
     
     std::string info = "Encrypted Filsystem:\n\nAvailable Commands:\ncd <dir>\nls\npwd\nmkfile <file> <contents> \

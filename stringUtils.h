@@ -20,4 +20,30 @@ std::string strip(std::string str) {
     return str.substr(start, end - start + 1);
 }
 
+/*
+remove prefix from string
+*/
+std::string removePrefix(const std::string &fullString, const std::string &prefix) {
+    return fullString.substr(prefix.length());
+}
+
+/*
+split a string
+*/
+std::vector<std::string> split(const std::string &s, char delim) 
+{
+    std::vector<std::string> elems;
+    std::stringstream ss;
+    ss.str(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) 
+    {
+        if(!item.empty())
+        {
+            elems.push_back(item);
+        }
+    }
+    return elems;
+}
+
 #endif // STRINGUTILS_H
