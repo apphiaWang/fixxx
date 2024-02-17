@@ -77,3 +77,57 @@ void cat(const std::string& filename) {
         std::cout << "cat failed. Exception in decrypt: " << e.what() << std::endl;
     }
 }
+
+void mkfile(const std::string& filename, std::string contents) {
+    // Split current path to check if operation is allowed
+    auto pathTokens = split(currentPath, "filesystem/");
+    if (pathTokens.size() < 2 || split(pathTokens[1], '/').size() < 2) {
+        std::cout << "Can't create file here" << std::endl;
+        return;
+    }
+
+    // Extract user and folder name from path
+    auto relPath = split(pathTokens[1], '/');
+    auto user = decryptFilename(relPath[0], adminName);
+    auto folderName = decryptFilename(relPath[1], user);
+    
+    // Validate user and folder name
+    if (user.empty() || folderName.empty() || folderName == "shared") {
+        std::cout << "Can't create file here" << std::endl;
+        return;
+    }
+
+    // Encrypt filename and contents
+    std::string filenameEnc;
+    try {
+        filenameEnc = encryptFilename(filename, user);
+        contents = encrypt(contents, user);
+    } catch (const std::exception& e) {
+        std::cout << "mkfile failed. Exception in encrypt: " << e.what() << std::endl;
+        return;
+    }
+
+    // Check if filename already exists
+    if (std::filesystem::exists(currentPath / filenameEnc)) {
+        std::cout << "Name already exists" << std::endl;
+        return;
+    }
+
+    // Create and write to file
+    std::ofstream file(currentPath / filenameEnc, std::ofstream::trunc);
+    if (!file.is_open()) {
+        std::cout << "Failed to create file" << std::endl;
+        return;
+    }
+    
+    file << contents;
+    file.close();
+    std::cout << "Successfully created file" << std::endl;
+
+    // Share file with receivers
+    auto receivers = isAdmin ? getReceivers(userOfPath(currentPath), getRelativePath(currentPath / filenameEnc, encryptFilename(userOfPath(currentPath), adminName).length() + currentPathPrefixLength + 1))
+                             : getReceivers(userOfPath(currentPath), getRelativePath(currentPath / filenameEnc, currentPathPrefixLength + 1));
+    for (const auto& receiver : receivers) {
+        share(filename, receiver);
+    }
+}
