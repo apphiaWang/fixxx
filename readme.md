@@ -26,18 +26,26 @@
 - Rithik Agarwal
 - Aastha Jha
 
-## Developer's note
-Compile the filesystem binsary
+## System Design
+
+### Start System
+Compile the filesystem binary
 ```sh
-g++ -std=c++17 main.cpp -o fileserver -lssl -lcrypto
+g++ -std=c++17 main.cpp -o fileserver -lcrypto
 ```
 
 Enter the file system
 ```sh
 ./filesystem <your_admin_name>
 ```
+	(First time execution: this will create folders and keypairs)   
+	(Normal execution: will do the login verification based on the provide username)
 
 Press ctrl + C to exit the file system. 
+
+## Auth part
+public key location: ./public_keys/adminName_public.pem   
+private key location: ./filesystem/private_keys/adminName_private.pem
 
 
 Works are tracked at [Trello](https://trello.com/b/GKl7tSmP/cmpt785-bibifi).
