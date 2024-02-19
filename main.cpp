@@ -1,13 +1,9 @@
-#include <iostream>
 #include <filesystem>
 #include <fstream>
-#include <string>
 #include <cstring>
 #include <map>
 #include <vector>
 #include <sstream>
-#include <sys/stat.h>
-
 #include "commands.h"
 #include "fileUtils.h"
 #include "stringUtils.h"
@@ -57,6 +53,32 @@ void prompt()
     }
 }
 
+void init_filesystem(const std::string& name){
+    const char *folder_name = "filesystem";
+    const char *metadata = "filesystem/metadata";
+    const char *public_folder_name = "public_keys";
+    const char *private_folder_name = "filesystem/private_keys";
+    std::string text = "This is the BIBIFI project for CMPT785. The first stage of this project is to create a filesystem simulator.";
+    std::cout << "Initializing CMPT785 encrypted file system..." << std::endl;
+    mkdir(folder_name, S_IRWXU);
+    mkdir(public_folder_name, S_IRWXU);
+    mkdir(private_folder_name, S_IRWXU);
+    mkdir(metadata, S_IRWXU);
+    // output text into metadata file
+    std::ofstream file("filesystem/metadata/config.txt");
+    if (file.is_open()) {
+        // Write the text to the file
+        file << text;
+        // Close the file
+        file.close();
+    }
+    std::cout << "Generating key pair for " << name << "..." << std::endl;
+    std::string name_prefix(name); 
+    generate_key_pair(name_prefix);
+    std::cout << "Key pair generated." << std::endl;
+
+}
+
 int main(int argc, char* argv[])
 {
     const char *seed = "some random fake encryption template....";
@@ -70,19 +92,10 @@ int main(int argc, char* argv[])
     // Init filesystem root folder if not exist
     struct stat st;
     const char *folder_name = "filesystem";
-    const char *public_folder_name = "public_keys";
-    const char *private_folder_name = "filesystem/private_keys";
     	
     if (stat(folder_name, &st) == -1) {
         if (errno == ENOENT) {
-            std::cout << "Initializing CMPT785 encrypted file system..." << std::endl;
-            mkdir(folder_name, S_IRWXU);
-            mkdir(public_folder_name, S_IRWXU);
-            mkdir(private_folder_name, S_IRWXU);
-            std::cout << "Generating key pair for " << argv[1] << "..." << std::endl;
-            std::string name_prefix(argv[1]); 
-            generate_key_pair(name_prefix);
-            std::cout << "Key pair generated." << std::endl;
+            init_filesystem(argv[1]);
         } else {
             // @TODO Some other error occurred.
             return 0;
