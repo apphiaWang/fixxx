@@ -3,7 +3,50 @@
 #include <openssl/evp.h>
 #include <openssl/err.h>
 #include <cstdlib> 
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <iostream>
 
+std::string read_seed(const std::string& filename) {
+    std::ifstream file(filename);
+    std::string seed;
+
+    if (file.is_open()) {
+        // Skip the first 7 characters
+        file.ignore(7);
+
+        // Read the rest of the file as the seed
+        std::getline(file, seed, '\0');
+        file.close();
+    } else {
+        std::cerr << "Unable to open file: " << filename << std::endl;
+    }
+
+    return seed;
+}
+
+std::string encrypt_decrypt(const std::string& text) {
+    std::string key = read_seed("filesystem/metadata/config.txt");
+    std::string result = text;
+
+    for (size_t i = 0; i < text.size(); ++i) {
+        result[i] = text[i] ^ key[i % key.size()];
+    }
+
+    return result;
+}
+
+void create_user_dir(const std::string& name) {
+    std::string dir_path = "filesystem/";
+    std::string cypher = encrypt_decrypt(name);
+    dir_path += cypher;
+    std::cout << "text after decrypt: " << encrypt_decrypt(cypher) << std::endl;
+    const char* full_dir_path = dir_path.c_str();
+    mkdir(full_dir_path, S_IRWXU);
+}
 
 void generate_key_pair(const std::string& name_prefix) {
     int             ret = 0;
@@ -45,8 +88,11 @@ void generate_key_pair(const std::string& name_prefix) {
     if(ret != 1){
         // handle error
     }
+    
+    //4. create user directory
+    create_user_dir(name_prefix);
 
-    // 4. Free
+    // 5. Free
     BIO_free_all(bp_public);
     BIO_free_all(bp_private);
     RSA_free(r);
