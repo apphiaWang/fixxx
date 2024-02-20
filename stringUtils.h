@@ -24,6 +24,9 @@ std::string strip(std::string str) {
 remove prefix from string
 */
 std::string removePrefix(const std::string &fullString, const std::string &prefix) {
+    if (fullString.length() < prefix.length()) {
+        throw (0);
+    }
     return fullString.substr(prefix.length());
 }
 
