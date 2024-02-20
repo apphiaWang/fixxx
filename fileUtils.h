@@ -40,7 +40,7 @@ Encrypt file name
 */
 std::string encryptFilename(const std::string &filename, const std::string &username) {
     // TODO @team encryption
-    return filename + "-" + username;
+    return filename;
 }
 
 /*
@@ -48,8 +48,7 @@ Decrypt file name
 */
 std::string decryptFilename(const std::string &cipher, const std::string &username) {
     // TODO @team decrypt file name
-    // suffix removal
-    return cipher.substr(0, cipher.length() - username.length() - 1);
+    return cipher;
 }
 
 /*

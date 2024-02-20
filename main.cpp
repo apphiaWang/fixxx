@@ -26,17 +26,24 @@ void prompt()
     int numargs;
     while(1)
     {
-        //TODO @team add your commands here
-        std::cout << "Enter your command:> ";
+        std::cout << "CMPT785BIBIFI> ";
         std::getline(std::cin, cmd);
         cmd = strip(cmd);
         if(cmd == "")
         {
             continue;
-        } 
+        }
+        else if(cmd == "exit") 
+        {
+            exit(1);
+        }
         else if (cmd == "pwd")
         {
             pwd();
+        }
+        else if (cmd == "ls")
+        {
+            ls();
         }
         else 
         { // commands with arguments
@@ -47,8 +54,18 @@ void prompt()
                 if (args.size() != 2) 
                 {
                     std::cout << "invalid argument, check user manual" << std::endl;
+                } else {
+                    cd(args[1]);
                 }
-                cd(args[1]);
+            }
+            else if (args[0] == "mkdir") 
+            {
+                if (args.size() != 2) 
+                {
+                    std::cout << "invalid argument, check user manual" << std::endl;
+                } else {
+                    mkdir(args[1]);
+                }                
             }
             else {
                 std::cout << "Invalid command" << std::endl;
@@ -109,7 +126,7 @@ int main(int argc, char* argv[])
     \nmkdir <dir>\ncat <file>\nshare <file> <user>\nexit\n\nAdmin can also use:\nadduser <user>\n\nFilename/username constraints: \
     \nMax 20 characters. Can only contain 'A-Z','a-z','0-9','-','_','.','='.\nFile contents max length: 470 bytes.\n\n";
     std::cout << info << std::endl;
-    prompt();
+    prompt();  
 
     return 0;
 }
