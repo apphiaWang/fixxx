@@ -63,6 +63,20 @@ void prompt()
                     mkdir(args[1]);
                 }                
             }
+            else if(args[0] == "mkfile")
+            {
+                if(args.size() != 3)
+                    std::cout << "invalid argument, check user manual" << std::endl;
+                else
+                    mkfile(args[1], args[2]);
+            }
+            else if(args[0] == "cat")
+            {
+                if(args.size() != 2)
+                    std::cout << "invalid argument, check user manual" << std::endl;
+                else
+                    cat(args[1]);
+            }
             else {
                 std::cout << "Invalid command" << std::endl;
             }
