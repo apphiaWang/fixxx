@@ -8,7 +8,7 @@
 #include "fileUtils.h"
 #include "stringUtils.h"
 #include "userUtils.h"
-#include "authentication.h"
+// #include "authentication.h"
 
 #define USERNAME_MAX_LEN 20
 
