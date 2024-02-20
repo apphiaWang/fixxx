@@ -326,4 +326,115 @@ void mkfile(const std::string& filename, std::string contents) {
     std::cout << "Successfully created file" << std::endl;
 }
 
+/*
+adduser - create a new user
+*/
+void adduser(const std::string& username){
+
+    if (!isAdmin) {
+        std::cout << "Invaid command, please check user manual" << std::endl;
+        return;
+    }
+    if (username.empty() || username.length() > FILENAME_MAX_LEN) 
+    {
+        std::cout << "Invaid username, please check user manual" << std::endl;
+        return;
+    }
+    for (const char c : username) 
+    {
+        if (!isalnum(c) && c != '_' && c != '-' && c != '.' && c != '=') {
+            std::cout << "Invaid username, please check user manual" << std::endl;
+            return;
+        }
+    }
+    generate_key_pair(username);
+
+    // @TODO update metadata    
+    std::cout << "Successfully added user: " << username << std::endl;
+}
+
+/*
+share - share a file with another user
+*/
+void share(const std::string& filename, const std::string& username)
+{
+    // input validation
+    if (username == currentUser) {
+        std::cout << "You cannot share file with yourself" << std::endl;
+        return;
+    }
+    if (filename.empty() || filename.length() > FILENAME_MAX_LEN) 
+    {
+        std::cout << "Invaid file name, please check user manual" << std::endl;
+        return;
+    }
+    for (const char c : filename) 
+    {
+        if (!isalnum(c) && c != '_' && c != '-' && c != '.' && c != '=') {
+            std::cout << "Invaid file name, please check user manual" << std::endl;
+            return;
+        }
+    }
+
+    std::string locPath;
+    try {
+        locPath = removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR);
+    } catch (int error) {
+        std::cout << "Can't share file here" << std::endl;
+        return;
+    }
+
+    auto relPath = split(locPath, '/');
+    auto userOfFile = encrypt_decrypt(relPath[0]);
+    auto folderName = encrypt_decrypt(relPath[1]);
+    // Should only create files under filesystem/<user>/personal
+    if (userOfFile.empty() || userOfFile !=  currentUser || folderName.empty() || folderName == "shared") {
+        std::cout << "Can't share file here" << std::endl;
+        return;
+    }
+
+    auto fullFilePath = currentPath / encrypt_decrypt(filename);                          
+    if (!std::filesystem::exists(fullFilePath))
+    {
+        std::cout << "File " << filename << " doesn't exist." << std::endl;
+        return;
+    }
+    if(!std::filesystem::is_regular_file(fullFilePath))
+    {
+        std::cout << "File " << filename << " isn't a regular file." << std::endl;
+        return;
+    }
+    
+    // Check the target user 1. exists 2. is not the currentUser
+    // @TODO check if the target user exists
+    
+
+    // Read the source file
+    std::ifstream source_file(fullFilePath.generic_string());
+    if (source_file.fail()) {
+    std::cerr << "Failed to open file: " << filename << std::endl;
+    return;
+    }
+    std::string content;
+    char ch;
+    while (source_file.get(ch)) {
+        content += ch;
+    }
+
+    // Decrypt and re-encrypt the file content
+    auto currentPathUser = userOfPath(currentPath);
+    auto decryptedContent = decryptFileContent(content);
+    auto encryptedContent = encryptFileContent(decryptedContent);
+
+    // Define the target path and write the encrypted content
+    auto full_target_path = std::filesystem::current_path() / "filesystem" / encrypt_decrypt(username) / encrypt_decrypt("shared") / encrypt_decrypt(currentPathUser + "_" + filename);
+    std::ofstream ofs(full_target_path.generic_string(), std::ios::trunc);
+    ofs << encryptedContent;
+    if (!ofs) {
+        std::cerr << "Share file failed. Failed to write to file: " << full_target_path << std::endl;
+        return;
+    }
+    std::cout << "Successfully shared file: "<< filename << " with user: " << username << std::endl;
+}
+
 #endif // COMMANDS_H
