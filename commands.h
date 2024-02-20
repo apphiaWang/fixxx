@@ -4,6 +4,8 @@
 #include "stringUtils.h"
 #include "fileUtils.h"
 #include "cryptoUtills.h"
+#include "authentication.h"
+
 
 /* session info*/
 std::string currentUser;
@@ -32,7 +34,7 @@ void pwd()
         // remove path before filesystem
         std::string path = isAdmin 
                             ? removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR) 
-                            : removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR + encryptFilename(currentUser, adminName));
+                            : removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR + encrypt_decrypt(currentUser));
 
         std::string userOfFolder = userOfPath(currentPath);
 
@@ -40,9 +42,9 @@ void pwd()
         auto pathToBePrintedTokens = split(path, '/');
         for (std::vector<std::string>::iterator it = pathToBePrintedTokens.begin() ; it != pathToBePrintedTokens.end(); ++it) {
             if(isAdmin && it ==  pathToBePrintedTokens.begin()){
-                std::cout << decryptFilename(*it, adminName) + "/";  
+                std::cout << encrypt_decrypt(*it) + "/";  
             }else{
-                std::cout << decryptFilename(*it, userOfFolder) + "/";
+                std::cout << encrypt_decrypt(*it) + "/";
             }
         }
     }
@@ -79,7 +81,7 @@ void cd(const std::string& targetDir)
         } 
         else if(token != ".." && token != ".")
         {
-            dirName = encryptFilename(token, username);            
+            dirName = encrypt_decrypt(token);            
         }
         else
         {
@@ -145,7 +147,7 @@ void mkdir(const std::string& dirname)
     // check if user is allowed to mkdir under current directory
     // user should only mkdir under filesystem/<username>/personal
     auto relpath = split(locPath,'/');
-    auto userOfLoc = decryptFilename(relpath[0], adminName);
+    auto userOfLoc = encrypt_decrypt(relpath[0]);
     if(userOfLoc.empty()) {
         std::cout << "An error occurs, please contact admin" << std::endl;
         return;
@@ -154,7 +156,7 @@ void mkdir(const std::string& dirname)
         std::cout << "Can't create dir here" << std::endl;
         return;
     }
-    auto expectHomeDir = decryptFilename(relpath[1], userOfLoc);
+    auto expectHomeDir = encrypt_decrypt(relpath[1]);
     if(expectHomeDir.empty() or expectHomeDir != "personal") {
         std::cout << "Can't create dir here" << std::endl;
         return;
@@ -162,7 +164,7 @@ void mkdir(const std::string& dirname)
 
     std::string dirname_enc, user_enc, share_enc;
     try {
-        dirname_enc = encryptFilename(dirname, userOfLoc);
+        dirname_enc = encrypt_decrypt(dirname);
     }
     catch (const std::exception& e) {
         std::cout << "mkdir failed. Exception in encrypt: " << e.what() << std::endl;
@@ -198,7 +200,7 @@ void ls()
     for (const auto& item : std::filesystem::directory_iterator(currentPath))
     {
         std::string file = item.path().filename();
-        std::string decryptedFile = decryptFilename(file, userOfPath(currentPath));
+        std::string decryptedFile = encrypt_decrypt(file);
         // if decrypted file is not empty
         if(decryptedFile.size() > 0)
         {

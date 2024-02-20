@@ -40,12 +40,16 @@ std::string encrypt_decrypt(const std::string& text) {
 }
 
 void create_user_dir(const std::string& name) {
-    std::string dir_path = "filesystem/";
+    std::string system_root_path = "filesystem";
     std::string cypher = encrypt_decrypt(name);
-    dir_path += cypher;
-    std::cout << "text after decrypt: " << encrypt_decrypt(cypher) << std::endl;
+    std::string dir_path = system_root_path + "/" + cypher;
     const char* full_dir_path = dir_path.c_str();
     mkdir(full_dir_path, S_IRWXU);
+    
+    std::string personal_path = system_root_path + "/" + cypher + "/" + encrypt_decrypt("personal");
+    std::string shared_path = system_root_path + "/" + cypher + "/" + encrypt_decrypt("shared");
+    mkdir(personal_path.c_str(), S_IRWXU);
+    mkdir(shared_path.c_str(), S_IRWXU);
 }
 
 void generate_key_pair(const std::string& name_prefix) {
