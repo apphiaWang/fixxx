@@ -8,9 +8,7 @@
 
 
 /* session info*/
-// @TODO team set currentUser and adminName when after program starts
-std::string currentUser = "admin";
-std::string adminName = "admin";
+std::string currentUser;
 bool isAdmin = false;
 
 

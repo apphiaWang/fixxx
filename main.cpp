@@ -151,9 +151,11 @@ int main(int argc, char* argv[])
             std::string name_prefix(argv[1]); 
             bool is_valid = validate_login(name_prefix, seed);
             if (is_valid) {
-                std::cout << "Login succeeded." << std::endl;                
+                std::cout << "Login succeeded." << std::endl;
+                currentUser = argv[1];
                 // @TODO check if user is admin and track status, now assume user is always admin
                 isAdmin = true;
+                // set 
             } else {
                 std::cout << "Login failed." << std::endl;
                 return 0;
