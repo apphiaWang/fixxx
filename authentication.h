@@ -39,6 +39,28 @@ std::string encrypt_decrypt(const std::string& text) {
     return result;
 }
 
+bool checkRole(const std::string& name){
+    std::ifstream file("filesystem/metadata/users.txt");
+    std::stringstream buffer;
+    if (file.is_open()) {
+        // Read the rest of the file as the seed
+        buffer << file.rdbuf();
+        file.close();
+    } else {
+        std::cerr << "Unable to open file: " << std::endl;
+    }
+    std::string adminName = encrypt_decrypt(buffer.str());
+    if (adminName == name) {
+    	std::cout << "You login as the Admin Role." << std::endl;
+    	return true;
+    }else{
+    	std::cout << "You login as the normal Role." << std::endl;
+    	return false;
+    }
+    
+    
+}
+
 void create_user_dir(const std::string& name) {
     std::string system_root_path = "filesystem";
     std::string cypher = encrypt_decrypt(name);
