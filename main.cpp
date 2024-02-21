@@ -77,6 +77,20 @@ void prompt()
                 else
                     cat(args[1]);
             }
+            else if(args[0] == "adduser")
+            {
+                if(args.size() != 2)
+                    std::cout << "invalid argument, check user manual" << std::endl;
+                else
+                    adduser(args[1]);
+            }
+            else if(args[0] == "share")
+            {
+                if(args.size() != 3)
+                    std::cout << "invalid argument, check user manual" << std::endl;
+                else
+                    share(args[1], args[2]);
+            }
             else {
                 std::cout << "Invalid command" << std::endl;
             }
@@ -149,10 +163,18 @@ int main(int argc, char* argv[])
         }
     }
 
-    std::string info = "CMPT785 Encrypted Filsystem:\n\nAvailable Commands:\ncd <dir>\nls\npwd\nmkfile <file> <contents> \
-    \nmkdir <dir>\ncat <file>\nshare <file> <user>\nexit\n\nAdmin can also use:\nadduser <user>\n\nFilename/username constraints: \
-    \nMax 20 characters. Can only contain 'A-Z','a-z','0-9','-','_','.','='.\nFile contents max length: 470 bytes.\n\n";
-    std::cout << info << std::endl;
+    std::string userInfo = "CMPT785 Encrypted Filsystem:\n\nAvailable Commands:\ncd <dir>\nls\npwd\nmkfile <file> <contents> \
+    \nmkdir <dir>\ncat <file>\nshare <file> <user>\nexit\n";
+
+    std::string nameConstraint = "Filename constraints: \
+    \nMax 20 characters. Can only contain 'A-Z','a-z','0-9','-','_','.','='.\nFile contents max length: 470 bytes.\n";
+    std::cout << userInfo << std::endl;
+    if (isAdmin){
+        std::cout << "Admin-only commands:\nadduser <user>\n" << std::endl;
+        std::cout << "Username/" << nameConstraint << std::endl;
+    } else {
+        std::cout << nameConstraint << std::endl;
+    }
     prompt();  
 
     return 0;
