@@ -103,7 +103,8 @@ void init_filesystem(const std::string& name){
     const char *metadata = "filesystem/metadata";
     const char *public_folder_name = "public_keys";
     const char *private_folder_name = "filesystem/private_keys";
-    std::string text = "Welcome everyone! This is the BIBIFI project for CMPT785. The first stage of this project is to create a filesystem simulator. ";
+    //std::string text = "This is the BIBIFI project for CMPT785. The first stage of this project is to create a filesystem simulator.";
+    std::string text = "89413218541861352189613516813218961321218989798456";
     std::cout << "Initializing CMPT785 encrypted file system..." << std::endl;
     mkdir(folder_name, S_IRWXU);
     mkdir(public_folder_name, S_IRWXU);
