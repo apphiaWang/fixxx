@@ -321,7 +321,6 @@ void mkfile(const std::string& filename, std::string contents) {
     
     file << contents;
     file.close();
-    std::cout << "Successfully created file" << std::endl;
 }
 
 /*
@@ -348,7 +347,6 @@ void adduser(const std::string& username){
     generate_key_pair(username);
 
     // @TODO update metadata    
-    std::cout << "Successfully added user: " << username << std::endl;
 }
 
 /*

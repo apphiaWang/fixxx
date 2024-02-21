@@ -141,6 +141,7 @@ int main(int argc, char* argv[])
     if (stat(folder_name, &st) == -1) {
         if (errno == ENOENT) {
             init_filesystem(argv[1]);
+            isAdmin = true;
         } else {
             // @TODO Some other error occurred.
             return 0;
@@ -152,7 +153,6 @@ int main(int argc, char* argv[])
             bool is_valid = validate_login(name_prefix, seed);
             if (is_valid) {
                 std::cout << "Login succeeded." << std::endl;
-                currentUser = argv[1];
                 // @TODO check if user is admin and track status, now assume user is always admin
                 isAdmin = true;
                 // set 
@@ -164,8 +164,9 @@ int main(int argc, char* argv[])
             return 0;
         }
     }
+    currentUser = argv[1];
 
-    std::string userInfo = "CMPT785 Encrypted Filsystem:\n\nAvailable Commands:\ncd <dir>\nls\npwd\nmkfile <file> <contents> \
+    std::string userInfo = "CMPT785 Encrypted Filesystem:\n\nAvailable Commands:\ncd <dir>\nls\npwd\nmkfile <file> <contents> \
     \nmkdir <dir>\ncat <file>\nshare <file> <user>\nexit\n";
 
     std::string nameConstraint = "Filename constraints: \
