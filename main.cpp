@@ -103,7 +103,7 @@ void init_filesystem(const std::string& name){
     const char *metadata = "filesystem/metadata";
     const char *public_folder_name = "public_keys";
     const char *private_folder_name = "filesystem/private_keys";
-    std::string text = "This is the BIBIFI project for CMPT785. The first stage of this project is to create a filesystem simulator.";
+    std::string text = "Welcome everyone! This is the BIBIFI project for CMPT785. The first stage of this project is to create a filesystem simulator. ";
     std::cout << "Initializing CMPT785 encrypted file system..." << std::endl;
     mkdir(folder_name, S_IRWXU);
     mkdir(public_folder_name, S_IRWXU);
@@ -121,7 +121,15 @@ void init_filesystem(const std::string& name){
     std::string name_prefix(name); 
     generate_key_pair(name_prefix);
     std::cout << "Key pair generated." << std::endl;
-
+    
+    std::ofstream userfile("filesystem/metadata/users.txt");
+    std::string username_cypher = encrypt_decrypt(name);
+    if (userfile.is_open()) {
+        // Write the text to the file
+        userfile << username_cypher;
+        // Close the file
+        userfile.close();
+    }
 }
 
 int main(int argc, char* argv[])
@@ -154,7 +162,7 @@ int main(int argc, char* argv[])
             if (is_valid) {
                 std::cout << "Login succeeded." << std::endl;
                 // @TODO check if user is admin and track status, now assume user is always admin
-                isAdmin = true;
+                isAdmin = checkRole(argv[1]);
                 // set 
             } else {
                 std::cout << "Login failed." << std::endl;
