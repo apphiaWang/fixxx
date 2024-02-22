@@ -30,7 +30,7 @@ void addFileShareMapping(const std::string &sender,
                          const std::string &receiver)
 {
     // TODO refactor
-    std::ifstream ifile("filesystem/metadata/fileShareMapping.txt");
+    std::ifstream ifile("filesystem/.metadata/fileShareMapping.txt");
     if (!ifile.is_open())
     {
         std::cerr << "Error: could not open fileShareMapping" << std::endl;
@@ -51,7 +51,7 @@ void addFileShareMapping(const std::string &sender,
     }
 
     std::ofstream ofile;
-    ofile.open("filesystem/metadata/fileShareMapping.txt", std::ios_base::app);
+    ofile.open("filesystem/.metadata/fileShareMapping.txt", std::ios_base::app);
     if (!ofile.is_open())
     {
         std::cerr << "Error: could not open fileShareMapping" << std::endl;
@@ -69,7 +69,7 @@ std::vector<std::string> getReceivers(const std::string &sender, const std::stri
 {
     std::vector<std::string> receivers;
 
-    std::ifstream ifile("filesystem/metadata/fileShareMapping.txt");
+    std::ifstream ifile("filesystem/.metadata/fileShareMapping.txt");
     if (!ifile.is_open())
     {
         std::cerr << "Error: could not open fileShareMapping" << std::endl;
