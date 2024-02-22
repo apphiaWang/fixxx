@@ -98,30 +98,20 @@ void prompt()
 
 void init_filesystem(const std::string& name){
     const char *folder_name = "filesystem";
-    const char *metadata = "filesystem/metadata";
+    const char *metadata = "filesystem/.metadata";
     const char *public_folder_name = "public_keys";
-    const char *private_folder_name = "filesystem/private_keys";
-    //std::string text = "This is the BIBIFI project for CMPT785. The first stage of this project is to create a filesystem simulator.";
-    std::string text = "89413218541861352189613516813218961321218989798456";
+    const char *private_folder_name = "filesystem/.private_keys";
     std::cout << "Initializing CMPT785 encrypted file system..." << std::endl;
     mkdir(folder_name, S_IRWXU);
     mkdir(public_folder_name, S_IRWXU);
     mkdir(private_folder_name, S_IRWXU);
     mkdir(metadata, S_IRWXU);
-    // output text into metadata file
-    std::ofstream file("filesystem/metadata/config.txt");
-    if (file.is_open()) {
-        // Write the text to the file
-        file << text;
-        // Close the file
-        file.close();
-    }
     std::cout << "Generating key pair for " << name << "..." << std::endl;
     std::string name_prefix(name); 
     generate_key_pair(name_prefix);
     std::cout << "Key pair generated." << std::endl;
     
-    std::ofstream userfile("filesystem/metadata/users.txt");
+    std::ofstream userfile("filesystem/.metadata/users.txt");
     std::string username_cypher = encrypt_decrypt(name);
     if (userfile.is_open()) {
         // Write the text to the file
@@ -129,7 +119,7 @@ void init_filesystem(const std::string& name){
         // Close the file
         userfile.close();
     }
-    std::ofstream fileShareMappingFile("filesystem/metadata/fileShareMapping.txt");
+    std::ofstream fileShareMappingFile("filesystem/.metadata/fileShareMapping.txt");
     fileShareMappingFile.close();
 }
 
