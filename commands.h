@@ -211,7 +211,7 @@ void ls()
     {
         std::string file = item.path().filename();
         // TODO hide private_keys and metadata
-        if (file == "metadata" || file == "private_keys") {
+        if (file == ".metadata" || file == ".private_keys") {
             continue;
         }
         std::string decryptedFile = encrypt_decrypt(file);

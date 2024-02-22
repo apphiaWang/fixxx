@@ -11,28 +11,20 @@
 #include <iostream>
 
 #define RSA_KEY_LEN 4096
+#define OFFSET 7
 #define PLAINTEXT_MAX_LEN RSA_KEY_LEN / 8 - 42
+std::string globalString = "!@#$%^&)(^*()&*()(*^%^&$$%#$%^^*&$%#$%^$^&^";
 
-std::string read_seed(const std::string& filename) {
-    std::ifstream file(filename);
-    std::string seed;
-
-    if (file.is_open()) {
-        // Skip the first 7 characters
-        file.ignore(7);
-
-        // Read the rest of the file as the seed
-        std::getline(file, seed, '\0');
-        file.close();
-    } else {
-        std::cerr << "Unable to open file: " << filename << std::endl;
+std::string read_seed() {
+    std::string concatenatedString;
+    for (int i = 0; i < 5; ++i) {
+        concatenatedString += globalString;
     }
-
-    return seed;
+    return concatenatedString.substr(OFFSET);
 }
 
 std::string encrypt_decrypt(const std::string& text) {
-    std::string key = read_seed("filesystem/metadata/config.txt");
+    std::string key = read_seed();
     std::string result = text;
 
     for (size_t i = 0; i < text.size(); ++i) {
@@ -43,7 +35,7 @@ std::string encrypt_decrypt(const std::string& text) {
 }
 
 bool checkRole(const std::string& name){
-    std::ifstream file("filesystem/metadata/users.txt");
+    std::ifstream file("filesystem/.metadata/users.txt");
     std::stringstream buffer;
     if (file.is_open()) {
         // Read the rest of the file as the seed
@@ -71,7 +63,7 @@ std::string rsa_encrypt(std::string plaintext, std::string username)
     RSA *private_key = nullptr;
     unsigned char *encrypted = nullptr;
     int encrypted_length = 0;
-    const char *dir_private_path = "filesystem/private_keys";
+    const char *dir_private_path = "filesystem/.private_keys";
     char private_key_path[256];
     snprintf(private_key_path, sizeof(private_key_path), "%s/%s_private.pem", dir_private_path, username.c_str());
     bp_private = BIO_new_file(private_key_path, "r");
@@ -177,7 +169,7 @@ void generate_key_pair(const std::string& name_prefix) {
         // handle error
     }
     
-    const char *dir_private_path = "filesystem/private_keys";
+    const char *dir_private_path = "filesystem/.private_keys";
     char private_key_path[256];
     snprintf(private_key_path, sizeof(private_key_path), "%s/%s_private.pem", dir_private_path, name_prefix.c_str());
     // 3. Save private key
@@ -208,7 +200,7 @@ bool validate_login(const std::string& name_prefix, const std::string& data) {
     int decrypted_length = 0;
 
     // 1. Load private key
-    const char *dir_private_path = "filesystem/private_keys";
+    const char *dir_private_path = "filesystem/.private_keys";
     char private_key_path[256];
     snprintf(private_key_path, sizeof(private_key_path), "%s/%s_private.pem", dir_private_path, name_prefix.c_str());
     bp_private = BIO_new_file(private_key_path, "r");
