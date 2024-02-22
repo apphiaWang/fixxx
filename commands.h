@@ -9,17 +9,35 @@
 /* session info*/
 std::string currentUser;
 bool isAdmin = false;
+auto currentPath = std::filesystem::current_path() / "filesystem/";
+auto userRootPath = std::filesystem::current_path() / "filesystem/";
 
 
 /*** constants ***/
 #define FILENAME_MAX_LEN 20
-// Serve for stripping / display purpose
+#define FILECONTENT_MAX_LEN 4096
 const std::filesystem::path SYSTEM_ROOT_PATH = std::filesystem::current_path();
 const std::string FILE_SYSTEM_ROOT_PATH_STR = (std::filesystem::current_path() / "filesystem/").u8string();
-// current path
-auto currentPath = std::filesystem::current_path() / "filesystem/";
-// init() should update it to user root directory
-auto userRootPath = std::filesystem::current_path() / "filesystem/";
+
+
+/*
+Utilility functions
+*/
+void enterUserHome(const std::string& username)
+{
+    currentPath = currentPath / encrypt_decrypt(username);
+    userRootPath = userRootPath / encrypt_decrypt(username);
+}
+
+bool checkUserExist(const std::string &username) {
+    return std::filesystem::exists(SYSTEM_ROOT_PATH / "filesystem" / encrypt_decrypt(username));
+}
+
+std::string userOfPath(const std::string path){
+    std::string locPath = removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR);
+    auto relPaths = split(locPath,'/');
+    return encrypt_decrypt(relPaths[0]);
+}
 
 
 /* 
@@ -33,8 +51,6 @@ void pwd()
         std::string path = isAdmin 
                             ? removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR) 
                             : removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR + encrypt_decrypt(currentUser));
-
-        std::string userOfFolder = userOfPath(currentPath);
 
         // decrypt paths and print it
         auto pathToBePrintedTokens = split(path, '/');
@@ -71,7 +87,6 @@ void cd(const std::string& targetDir)
 
         std::string token = *it;
         std::string dirName;
-        std::string username = userOfPath(tmpPath);
 
         if (token == "")
         {  // multiple '/', e.g. "///", will be considered as single '/'
@@ -195,6 +210,10 @@ void ls()
     for (const auto& item : std::filesystem::directory_iterator(currentPath))
     {
         std::string file = item.path().filename();
+        // TODO hide private_keys and metadata
+        if (file == "metadata" || file == "private_keys") {
+            continue;
+        }
         std::string decryptedFile = encrypt_decrypt(file);
         // if decrypted file is not empty
         if(decryptedFile.size() > 0)
@@ -206,33 +225,22 @@ void ls()
             }
             std::cout << decryptedFile << std::endl;
         }
-        // @TODO check encryption decryption with team and design the behavior
-        // else if (isAdmin)
-        // {   // only shows unencrypted dir/files to admin user
-        //     if (item.is_directory()) {
-        //         std::cout << "(unencrypted) d -> " << file << std::endl;
-        //     } else {
-        //        std::cout << "(unencrypted) f ->" << file << std::endl;
-                
-        //     }
-        // }
     }
-}
-
-std::string encryptFileContent(std::string plaintext) {
-    return plaintext;
-}
-
-std::string decryptFileContent(std::string cipher) {
-    return cipher;
 }
 
 /*
 cat - print the content of the file
 */
 void cat(const std::string& filename) {
-    std::string pathLoc = removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR);
-    std::string finalPath = "filesystem/" + pathLoc + "/" + encrypt_decrypt(filename);
+    std::string locPath = removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR);
+    std::string finalPath = "filesystem/" + locPath + "/" + encrypt_decrypt(filename);
+
+    auto relPaths = split(locPath, '/');
+    if (relPaths.size() < 2) {
+        std::cout << "Cat file failed." << std::endl;
+        return;
+    }
+    std::string owner = encrypt_decrypt(relPaths[0]); 
 
     std::ifstream file(finalPath);
     if (file.is_open())
@@ -240,8 +248,7 @@ void cat(const std::string& filename) {
         try {
             std::stringstream buffer;
             file >> buffer.rdbuf();
-            // TODO @Hugh implement file content ecryption
-            std::cout << decryptFileContent(buffer.str()) << std::endl;
+            std::cout << rsa_decrypt(buffer.str(), owner) << std::endl;
         }
         catch (const std::exception& e) {
             std::cout << "cat failed. Exception in decrypt: " << e.what() << std::endl;
@@ -250,79 +257,8 @@ void cat(const std::string& filename) {
     }
     else
     {
-        std::cout << filename << " doesn't exist" << std::endl;
+        std::cout << "cat failed, " << filename << " doesn't exist" << std::endl;
     }
-}
-
-
-/*
-mkfile - create a new text file
-*/
-void mkfile(const std::string& filename, std::string contents) {
-    // input validation
-    if (filename.empty() || filename.length() > FILENAME_MAX_LEN) 
-    {
-        std::cout << "Invaid file name, please check user manual" << std::endl;
-        return;
-    }
-    for (const char c : filename) 
-    {
-        if (!isalnum(c) && c != '_' && c != '-' && c != '.' && c != '=') {
-            std::cout << "Invaid file name, please check user manual" << std::endl;
-            return;
-        }
-    }
-    
-    // get the current location path and the target file path to create
-    std::string locPath;
-    auto canonicalFile = std::filesystem::weakly_canonical(currentPath / filename);
-    std::string filePath;
-    try {
-        locPath = removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR);
-        filePath = removePrefix(canonicalFile.u8string(), FILE_SYSTEM_ROOT_PATH_STR);
-    } catch (int error) {
-        std::cout << "Can't create file here" << std::endl;
-        return;
-    }
-
-    auto relPath = split(locPath, '/');
-    auto user = encrypt_decrypt(relPath[0]);
-    auto folderName = encrypt_decrypt(relPath[1]);
-    std::cout << user << currentUser << std::endl;
-    // Should only create files under filesystem/<user>/personal
-    if (user.empty() || user !=  currentUser || folderName.empty() || folderName == "shared") {
-        std::cout << "Can't create file here" << std::endl;
-        return;
-    }
-
-    // Encrypt filename and contents
-    std::string filenameEnc;
-    std::string cypher;
-    try {
-        filenameEnc = encrypt_decrypt(filename);
-        cypher = rsa_encrypt(contents, currentUser);
-        std::cout << "content after encryption: " << cypher << std::endl;
-        std::cout << "content after decryption: " << rsa_decrypt(cypher, currentUser) << std::endl;
-    } catch (const std::exception& e) {
-        std::cout << "mkfile failed. Exception in encrypt: " << e.what() << std::endl;
-        return;
-    }
-
-    // Check if filename already exists
-    if (std::filesystem::exists(currentPath / filenameEnc)) {
-        std::cout << "mkfile failed. File "<< filename << " already exists" << std::endl;
-        return;
-    }
-
-    // Create and write to file
-    std::ofstream file(currentPath / filenameEnc, std::ofstream::trunc);
-    if (!file.is_open()) {
-        std::cout << "Failed to create file" << std::endl;
-        return;
-    }
-    
-    file << cypher;
-    file.close();
 }
 
 /*
@@ -346,9 +282,11 @@ void adduser(const std::string& username){
             return;
         }
     }
+    if (checkUserExist(username)) {
+        std::cout << "Add user failed. User already exists." << std::endl;
+        return;
+    }
     generate_key_pair(username);
-
-    // @TODO update metadata    
 }
 
 /*
@@ -373,7 +311,6 @@ void share(const std::string& filename, const std::string& username)
             return;
         }
     }
-
     std::string locPath;
     try {
         locPath = removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR);
@@ -404,8 +341,10 @@ void share(const std::string& filename, const std::string& username)
     }
     
     // Check the target user 1. exists 2. is not the currentUser
-    // @TODO check if the target user exists
-    
+    if (!checkUserExist(username)) {
+        std::cout << "share file failed. User "<< username <<" doesn't exist." << std::endl;
+        return;
+    }
 
     // Read the source file
     std::ifstream source_file(fullFilePath.generic_string());
@@ -420,19 +359,91 @@ void share(const std::string& filename, const std::string& username)
     }
 
     // Decrypt and re-encrypt the file content
-    auto currentPathUser = userOfPath(currentPath);
-    auto decryptedContent = decryptFileContent(content);
-    auto encryptedContent = encryptFileContent(decryptedContent);
+    auto decryptedContent = rsa_decrypt(content, currentUser);
+    auto encryptedContent = rsa_encrypt(decryptedContent, username);
 
     // Define the target path and write the encrypted content
-    auto full_target_path = std::filesystem::current_path() / "filesystem" / encrypt_decrypt(username) / encrypt_decrypt("shared") / encrypt_decrypt(currentPathUser + "_" + filename);
+    std::string encFileName = encrypt_decrypt(currentUser + "_" + filename);
+    auto full_target_path = std::filesystem::current_path() / "filesystem" / encrypt_decrypt(username) / encrypt_decrypt("shared") / encFileName;
     std::ofstream ofs(full_target_path.generic_string(), std::ios::trunc);
     ofs << encryptedContent;
     if (!ofs) {
         std::cerr << "Share file failed. Failed to write to file: " << full_target_path << std::endl;
         return;
     }
-    std::cout << "Successfully shared file: "<< filename << " with user: " << username << std::endl;
+
+    addFileShareMapping(encrypt_decrypt(currentUser), encFileName, encrypt_decrypt(username));
+}
+
+/*
+mkfile - create a new text file
+*/
+void mkfile(const std::string& filename, std::string content) {
+    // input validation
+    if (filename.empty() || filename.length() > FILENAME_MAX_LEN) 
+    {
+        std::cout << "Invaid file name, please check user manual" << std::endl;
+        return;
+    }
+    for (const char c : filename) 
+    {
+        if (!isalnum(c) && c != '_' && c != '-' && c != '.' && c != '=') {
+            std::cout << "Invaid file name, please check user manual" << std::endl;
+            return;
+        }
+    }
+    if (content.length() > FILECONTENT_MAX_LEN) {
+        std::cout << "Content too long, file content should not exceed " << FILECONTENT_MAX_LEN << " bytes." << std::endl;
+        return;
+    }
+    
+    // get the current location path and the target file path to create
+    std::string locPath;
+    auto canonicalFile = std::filesystem::weakly_canonical(currentPath / filename);
+    std::string filePath;
+    try {
+        locPath = removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR);
+        filePath = removePrefix(canonicalFile.u8string(), FILE_SYSTEM_ROOT_PATH_STR);
+    } catch (int error) {
+        std::cout << "Can't create file here" << std::endl;
+        return;
+    }
+
+    auto relPath = split(locPath, '/');
+    auto user = encrypt_decrypt(relPath[0]);
+    auto folderName = encrypt_decrypt(relPath[1]);
+    // Should only create files under filesystem/<user>/personal
+    if (user.empty() || user !=  currentUser || folderName.empty() || folderName == "shared") {
+        std::cout << "Can't create file here" << std::endl;
+        return;
+    }
+
+    // Encrypt filename and content
+    std::string filenameEnc;
+    std::string cypher;
+    try {
+        filenameEnc = encrypt_decrypt(filename);
+        cypher = rsa_encrypt(content, currentUser);
+    } catch (const std::exception& e) {
+        std::cout << "mkfile failed. Exception in encrypt: " << e.what() << std::endl;
+        return;
+    }
+    
+    // Create and write to file
+    std::ofstream file(currentPath / filenameEnc, std::ofstream::trunc);
+    if (!file.is_open()) {
+        std::cout << "Failed to create file" << std::endl;
+        return;
+    }
+    file << cypher;
+    file.close();
+
+    // reshare file
+    std::vector<std::string> receivers;
+    receivers = getReceivers(encrypt_decrypt(currentUser), encrypt_decrypt(currentUser + "_" + filename));
+    for (auto receiver : receivers) {
+        share(filename, encrypt_decrypt(receiver));
+    }
 }
 
 #endif // COMMANDS_H

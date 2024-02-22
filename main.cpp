@@ -7,8 +7,6 @@
 #include "commands.h"
 #include "fileUtils.h"
 #include "stringUtils.h"
-#include "userUtils.h"
-// #include "authentication.h"
 
 #define USERNAME_MAX_LEN 20
 
@@ -131,6 +129,8 @@ void init_filesystem(const std::string& name){
         // Close the file
         userfile.close();
     }
+    std::ofstream fileShareMappingFile("filesystem/metadata/fileShareMapping.txt");
+    fileShareMappingFile.close();
 }
 
 int main(int argc, char* argv[])
@@ -162,9 +162,10 @@ int main(int argc, char* argv[])
             bool is_valid = validate_login(name_prefix, seed);
             if (is_valid) {
                 std::cout << "Login succeeded." << std::endl;
-                // @TODO check if user is admin and track status, now assume user is always admin
-                isAdmin = checkRole(argv[1]);
-                // set 
+                isAdmin = checkRole(name_prefix);
+                if (!isAdmin) {
+                    enterUserHome(name_prefix);
+                }
             } else {
                 std::cout << "Login failed." << std::endl;
                 return 0;
@@ -179,7 +180,7 @@ int main(int argc, char* argv[])
     \nmkdir <dir>\ncat <file>\nshare <file> <user>\nexit\n";
 
     std::string nameConstraint = "Filename constraints: \
-    \nMax 20 characters. Can only contain 'A-Z','a-z','0-9','-','_','.','='.\nFile contents max length: 470 bytes.\n";
+    \nMax 20 characters. Can only contain 'A-Z','a-z','0-9','-','_','.','='.\nFile contents max length: 4096 bytes.\n";
     std::cout << userInfo << std::endl;
     if (isAdmin){
         std::cout << "Admin-only commands:\nadduser <user>\n" << std::endl;

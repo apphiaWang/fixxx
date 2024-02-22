@@ -4,52 +4,10 @@
 #include <vector>
 #include <string>
 #include <map>
-#include <vector>
 #include <sstream>
 #include <iostream>
 #include <algorithm> 
 #include <filesystem>
-
-/*
-Check if filesystem already initialized
-*/
-bool fileSystemExist() {
-    // TODO @team
-    return true;
-}
-
-/*
-Init root folder filesystem for the encrypted file system
-*/
-void initSystemRoot() {
-    // TODO @team store the metadata
-    // TODO @team error handle
-    std::filesystem::create_directory("filesystem");
-}
-
-/*
-Find the owner of the current path for decryption
-*/
-std::string userOfPath(const std::string path){
-    // @TODO @team
-    return "admin";
-}
-
-/*
-Encrypt file name
-*/
-std::string encryptFilename(const std::string &filename, const std::string &username) {
-    // TODO @team encryption
-    return filename;
-}
-
-/*
-Decrypt file name
-*/
-std::string decryptFilename(const std::string &cipher, const std::string &username) {
-    // TODO @team decrypt file name
-    return cipher;
-}
 
 /*
 Check if user has access of the target directory
@@ -62,6 +20,77 @@ bool checkPathBoundary(const std::filesystem::path &root, const std::filesystem:
                            canonicalRootPath.begin(), canonicalRootPath.end());
     
     return itr == canonicalChildPath.begin();
+}
+
+/*
+Update file share mapping in metadata folder
+*/
+void addFileShareMapping(const std::string &sender,
+                         const std::string &filename,
+                         const std::string &receiver)
+{
+    // TODO refactor
+    std::ifstream ifile("filesystem/metadata/fileShareMapping.txt");
+    if (!ifile.is_open())
+    {
+        std::cerr << "Error: could not open fileShareMapping" << std::endl;
+    }
+
+    std::string line;
+    while (std::getline(ifile, line))
+    {
+        std::istringstream iss(line);
+        std::string senderCol, filenameCol, receiverCol;
+        if (std::getline(iss, senderCol, ',') && std::getline(iss, filenameCol, ',') && std::getline(iss, receiverCol, ','))
+        {
+            if (sender == senderCol && filename == filenameCol && receiver == receiverCol)
+            {
+                return;
+            }
+        }
+    }
+
+    std::ofstream ofile;
+    ofile.open("filesystem/metadata/fileShareMapping.txt", std::ios_base::app);
+    if (!ofile.is_open())
+    {
+        std::cerr << "Error: could not open fileShareMapping" << std::endl;
+        return;
+    }
+
+    ofile << sender << "," << filename << "," << receiver << std::endl;
+    ofile.close();
+}
+
+/*
+Get shared receivers of a file
+*/
+std::vector<std::string> getReceivers(const std::string &sender, const std::string &filename)
+{
+    std::vector<std::string> receivers;
+
+    std::ifstream ifile("filesystem/metadata/fileShareMapping.txt");
+    if (!ifile.is_open())
+    {
+        std::cerr << "Error: could not open fileShareMapping" << std::endl;
+        return receivers;
+    }
+
+    std::string line;
+    while (std::getline(ifile, line))
+    {
+        std::istringstream iss(line);
+        std::string senderCol, filenameCol, receiverCol;
+        if (std::getline(iss, senderCol, ',') && std::getline(iss, filenameCol, ',') && std::getline(iss, receiverCol, ','))
+        {
+            if (sender == senderCol && filename == filenameCol)
+            {
+                receivers.push_back(receiverCol);
+            }
+        }
+    }
+
+    return receivers;
 }
 
 #endif // FILEUTILS_H
