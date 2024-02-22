@@ -297,9 +297,12 @@ void mkfile(const std::string& filename, std::string contents) {
 
     // Encrypt filename and contents
     std::string filenameEnc;
+    std::string cypher;
     try {
         filenameEnc = encrypt_decrypt(filename);
-        contents = encryptFileContent(contents);
+        cypher = rsa_encrypt(contents, currentUser);
+        std::cout << "content after encryption: " << cypher << std::endl;
+        std::cout << "content after decryption: " << rsa_decrypt(cypher, currentUser) << std::endl;
     } catch (const std::exception& e) {
         std::cout << "mkfile failed. Exception in encrypt: " << e.what() << std::endl;
         return;
@@ -318,7 +321,7 @@ void mkfile(const std::string& filename, std::string contents) {
         return;
     }
     
-    file << contents;
+    file << cypher;
     file.close();
 }
 
