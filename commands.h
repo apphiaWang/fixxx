@@ -39,6 +39,20 @@ std::string userOfPath(const std::string path){
     return encrypt_decrypt(relPaths[0]);
 }
 
+bool checkFileameUsernameValid(const std::string& name) {
+    if (name.empty() || name.length() > FILENAME_MAX_LEN) 
+    {
+        return false;
+    }
+    for (const char c : name) 
+    {
+        if (!isalnum(c) && c != '_' && c != '-' && c != '.') {
+           return false;
+        }
+    }
+    return true;
+}
+
 
 /* 
 pwd - print current path
@@ -132,17 +146,9 @@ mkdir - create a new directory
 void mkdir(const std::string& dirname)
 {
     // input validation
-    if (dirname.empty() || dirname.length() > FILENAME_MAX_LEN) 
-    {
+    if (!checkFileameUsernameValid(dirname)) {
         std::cout << "mkdir failed, Invaid path, please check user manual" << std::endl;
         return;
-    }
-    for (const char c : dirname) 
-    {
-        if (!isalnum(c) && c != '_' && c != '-' && c != '.' && c != '=') {
-            std::cout << "mkdir failed, Invaid path, please check user manual" << std::endl;
-            return;
-        }
     }
     
     // get the current location path and the target directory to create
@@ -270,17 +276,9 @@ void adduser(const std::string& username){
         std::cout << "adduser failed, Invaid command, please check user manual" << std::endl;
         return;
     }
-    if (username.empty() || username.length() > FILENAME_MAX_LEN) 
-    {
+    if (!checkFileameUsernameValid(username)) {
         std::cout << "adduser failed, Invaid username, please check user manual" << std::endl;
         return;
-    }
-    for (const char c : username) 
-    {
-        if (!isalnum(c) && c != '_' && c != '-' && c != '.' && c != '=') {
-            std::cout << "adduser failed, Invaid username, please check user manual" << std::endl;
-            return;
-        }
     }
     if (checkUserExist(username)) {
         std::cout << "adduser failed, user already exists." << std::endl;
@@ -299,17 +297,9 @@ void share(const std::string& filename, const std::string& username)
         std::cout << "share failed, cannot share file with the owner" << std::endl;
         return;
     }
-    if (filename.empty() || filename.length() > FILENAME_MAX_LEN) 
-    {
-        std::cout << "share failed, invaid file name, please check user manual" << std::endl;
+    if (!checkFileameUsernameValid(filename)) {
+        std::cout << "share failed, Invaid filename" << std::endl;
         return;
-    }
-    for (const char c : filename) 
-    {
-        if (!isalnum(c) && c != '_' && c != '-' && c != '.' && c != '=') {
-            std::cout << "share failed, invaid file name, please check user manual" << std::endl;
-            return;
-        }
     }
     std::string locPath;
     try {
@@ -319,6 +309,10 @@ void share(const std::string& filename, const std::string& username)
         return;
     }
     auto relPath = split(locPath, '/');
+    if (relPath.size() < 2) {
+        std::cout << "share failed, can't share file here" << std::endl;
+        return;
+    }
     auto userOfFile = encrypt_decrypt(relPath[0]);
     auto folderName = encrypt_decrypt(relPath[1]);
     // Should only create files under filesystem/<user>/personal
@@ -379,21 +373,13 @@ mkfile - create a new text file
 */
 void mkfile(const std::string& filename, std::string content) {
     // input validation
-    if (content.empty()) {
-        std::cout << "mkfile failed, file content cannot be empty" << std::endl;
-        return;
-    }
-    if (filename.empty() || filename.length() > FILENAME_MAX_LEN) 
-    {
+    if (!checkFileameUsernameValid(filename)) {
         std::cout << "mkfile failed, Invaid file name, please check user manual" << std::endl;
         return;
     }
-    for (const char c : filename) 
-    {
-        if (!isalnum(c) && c != '_' && c != '-' && c != '.') {
-            std::cout << "mkfile failed, Invaid file name, please check user manual" << std::endl;
-            return;
-        }
+    if (content.empty()) {
+        std::cout << "mkfile failed, file content cannot be empty" << std::endl;
+        return;
     }
     if (content.length() > FILECONTENT_MAX_LEN) {
         std::cout << "mkfile failed, content too long, file content should not exceed " << FILECONTENT_MAX_LEN << " bytes." << std::endl;
