@@ -318,7 +318,6 @@ void share(const std::string& filename, const std::string& username)
         std::cout << "share failed, can't share file here" << std::endl;
         return;
     }
-    std::cout << "1" << std::endl;
     auto relPath = split(locPath, '/');
     auto userOfFile = encrypt_decrypt(relPath[0]);
     auto folderName = encrypt_decrypt(relPath[1]);
@@ -327,7 +326,6 @@ void share(const std::string& filename, const std::string& username)
         std::cout << "share failed, can't share file here" << std::endl;
         return;
     }
-    std::cout << "2" << std::endl;
     
     auto fullFilePath = currentPath / encrypt_decrypt(filename);                          
     if (!std::filesystem::exists(fullFilePath))
@@ -340,7 +338,6 @@ void share(const std::string& filename, const std::string& username)
         std::cout << "share failed, file " << filename << " isn't a regular file." << std::endl;
         return;
     }
-    std::cout << "3" << std::endl;
     
     // Check the target user 1. exists 2. is not the currentUser
     if (!checkUserExist(username)) {
@@ -359,7 +356,6 @@ void share(const std::string& filename, const std::string& username)
     while (source_file.get(ch)) {
         content += ch;
     }
-    std::cout << "4" << std::endl;
     
     // Decrypt and re-encrypt the file content
     auto decryptedContent = rsa_decrypt(content, currentUser);
@@ -429,7 +425,6 @@ void mkfile(const std::string& filename, std::string content) {
         return;
     }
 
-    std::cout << "1" << std::endl;
     // Encrypt filename and content
     std::string filenameEnc;
     std::string cypher;
