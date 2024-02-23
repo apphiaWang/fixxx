@@ -61,13 +61,6 @@ void prompt()
                     mkdir(args[1]);
                 }                
             }
-            else if(args[0] == "mkfile")
-            {
-                if(args.size() != 3)
-                    std::cout << "invalid argument, check user manual" << std::endl;
-                else
-                    mkfile(args[1], args[2]);
-            }
             else if(args[0] == "cat")
             {
                 if(args.size() != 2)
@@ -88,6 +81,23 @@ void prompt()
                     std::cout << "invalid argument, check user manual" << std::endl;
                 else
                     share(args[1], args[2]);
+            }
+            else if(args[0] == "mkfile")
+            {
+                // re-split the command
+                size_t contentStart = cmd.find_first_of('"');
+                size_t contentEnd = cmd.find_last_of('"');
+                if (contentStart == std::string::npos || contentStart == contentEnd || contentEnd != cmd.size()-1) {
+                    std::cout << "invalid argument, check user manual" << std::endl;
+                    continue;
+                }
+                std::string new_arg = strip(cmd.substr(0, contentStart-1));
+                auto new_args = split(new_arg, ' ');
+                std::string file_content = cmd.substr(contentStart + 1, contentEnd - contentStart-1);
+                if(new_args.size() != 2)
+                    std::cout << "invalid argument, check user manual" << std::endl;
+                else
+                    mkfile(new_args[1], file_content);
             }
             else {
                 std::cout << "Invalid command" << std::endl;
@@ -166,11 +176,12 @@ int main(int argc, char* argv[])
     }
     currentUser = argv[1];
 
-    std::string userInfo = "CMPT785 Encrypted Filesystem:\n\nAvailable Commands:\ncd <dir>\nls\npwd\nmkfile <file> <contents> \
+    std::string userInfo = "CMPT785 Encrypted Filesystem:\n\nAvailable Commands:\ncd <dir>\nls\npwd\nmkfile <file> <content> \
+    \n \t*quote your file content with double quote, i.e. \" \
     \nmkdir <dir>\ncat <file>\nshare <file> <user>\nexit\n";
 
     std::string nameConstraint = "Filename constraints: \
-    \nMax 20 characters. Can only contain 'A-Z','a-z','0-9','-','_','.','='.\nFile contents max length: 4096 bytes.\n";
+    \nMax 20 characters. Can only contain 'A-Z','a-z','0-9','-','_','.'.\nFile contents max length: 4096 bytes.\n";
     std::cout << userInfo << std::endl;
     if (isAdmin){
         std::cout << "Admin-only commands:\nadduser <user>\n" << std::endl;
