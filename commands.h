@@ -134,13 +134,13 @@ void mkdir(const std::string& dirname)
     // input validation
     if (dirname.empty() || dirname.length() > FILENAME_MAX_LEN) 
     {
-        std::cout << "Invaid path, please check user manual" << std::endl;
+        std::cout << "mkdir failed, Invaid path, please check user manual" << std::endl;
         return;
     }
     for (const char c : dirname) 
     {
         if (!isalnum(c) && c != '_' && c != '-' && c != '.' && c != '=') {
-            std::cout << "Invaid path, please check user manual" << std::endl;
+            std::cout << "mkdir failed, Invaid path, please check user manual" << std::endl;
             return;
         }
     }
@@ -153,7 +153,7 @@ void mkdir(const std::string& dirname)
         locPath = removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR);
         targetDir = removePrefix(canonicalDir.u8string(), FILE_SYSTEM_ROOT_PATH_STR);
     } catch (int error) {
-        std::cout << "Can't create dir here" << std::endl;
+        std::cout << "mkdir failed, Can't create dir here" << std::endl;
         return;
     }
     
@@ -162,13 +162,13 @@ void mkdir(const std::string& dirname)
     auto relpath = split(locPath,'/');
     auto userOfLoc = encrypt_decrypt(relpath[0]);
     if(userOfLoc.empty() || userOfLoc != currentUser || relpath.size() < 2) {
-        std::cout << "Can't create dir here" << std::endl;
+        std::cout << "mkdir failed, Can't create dir here" << std::endl;
         return;
     }
 
     auto expectHomeDir = encrypt_decrypt(relpath[1]);
     if(expectHomeDir.empty() or expectHomeDir != "personal") {
-        std::cout << "Can't create dir here" << std::endl;
+        std::cout << "mkdir failed, Can't create dir here" << std::endl;
         return;
     }    
 
@@ -182,7 +182,7 @@ void mkdir(const std::string& dirname)
     }
 
     if(std::filesystem::exists(currentPath / dirname_enc)) {
-        std::cout << "Name already exists" << std::endl; 
+        std::cout << "mkdir failed, " << dirname << " already exists" << std::endl; 
     } else {
         try {
             auto new_dir = currentPath / dirname_enc;
@@ -237,7 +237,7 @@ void cat(const std::string& filename) {
 
     auto relPaths = split(locPath, '/');
     if (relPaths.size() < 2) {
-        std::cout << "Cat file failed." << std::endl;
+        std::cout << "cat failed." << std::endl;
         return;
     }
     std::string owner = encrypt_decrypt(relPaths[0]); 
@@ -267,23 +267,23 @@ adduser - create a new user
 void adduser(const std::string& username){
 
     if (!isAdmin) {
-        std::cout << "Invaid command, please check user manual" << std::endl;
+        std::cout << "adduser failed, Invaid command, please check user manual" << std::endl;
         return;
     }
     if (username.empty() || username.length() > FILENAME_MAX_LEN) 
     {
-        std::cout << "Invaid username, please check user manual" << std::endl;
+        std::cout << "adduser failed, Invaid username, please check user manual" << std::endl;
         return;
     }
     for (const char c : username) 
     {
         if (!isalnum(c) && c != '_' && c != '-' && c != '.' && c != '=') {
-            std::cout << "Invaid username, please check user manual" << std::endl;
+            std::cout << "adduser failed, Invaid username, please check user manual" << std::endl;
             return;
         }
     }
     if (checkUserExist(username)) {
-        std::cout << "Add user failed. User already exists." << std::endl;
+        std::cout << "adduser failed, user already exists." << std::endl;
         return;
     }
     generate_key_pair(username);
@@ -296,18 +296,18 @@ void share(const std::string& filename, const std::string& username)
 {
     // input validation
     if (username == currentUser) {
-        std::cout << "You cannot share file with yourself" << std::endl;
+        std::cout << "share failed, cannot share file with the owner" << std::endl;
         return;
     }
     if (filename.empty() || filename.length() > FILENAME_MAX_LEN) 
     {
-        std::cout << "Invaid file name, please check user manual" << std::endl;
+        std::cout << "share failed, invaid file name, please check user manual" << std::endl;
         return;
     }
     for (const char c : filename) 
     {
         if (!isalnum(c) && c != '_' && c != '-' && c != '.' && c != '=') {
-            std::cout << "Invaid file name, please check user manual" << std::endl;
+            std::cout << "share failed, invaid file name, please check user manual" << std::endl;
             return;
         }
     }
@@ -315,49 +315,52 @@ void share(const std::string& filename, const std::string& username)
     try {
         locPath = removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR);
     } catch (int error) {
-        std::cout << "Can't share file here" << std::endl;
+        std::cout << "share failed, can't share file here" << std::endl;
         return;
     }
-
+    std::cout << "1" << std::endl;
     auto relPath = split(locPath, '/');
     auto userOfFile = encrypt_decrypt(relPath[0]);
     auto folderName = encrypt_decrypt(relPath[1]);
     // Should only create files under filesystem/<user>/personal
     if (userOfFile.empty() || userOfFile !=  currentUser || folderName.empty() || folderName == "shared") {
-        std::cout << "Can't share file here" << std::endl;
+        std::cout << "share failed, can't share file here" << std::endl;
         return;
     }
-
+    std::cout << "2" << std::endl;
+    
     auto fullFilePath = currentPath / encrypt_decrypt(filename);                          
     if (!std::filesystem::exists(fullFilePath))
     {
-        std::cout << "File " << filename << " doesn't exist." << std::endl;
+        std::cout << "share failed, file " << filename << " doesn't exist." << std::endl;
         return;
     }
     if(!std::filesystem::is_regular_file(fullFilePath))
     {
-        std::cout << "File " << filename << " isn't a regular file." << std::endl;
+        std::cout << "share failed, file " << filename << " isn't a regular file." << std::endl;
         return;
     }
+    std::cout << "3" << std::endl;
     
     // Check the target user 1. exists 2. is not the currentUser
     if (!checkUserExist(username)) {
-        std::cout << "share file failed. User "<< username <<" doesn't exist." << std::endl;
+        std::cout << "share failed. User "<< username <<" doesn't exist." << std::endl;
         return;
     }
 
     // Read the source file
     std::ifstream source_file(fullFilePath.generic_string());
     if (source_file.fail()) {
-    std::cerr << "Failed to open file: " << filename << std::endl;
-    return;
+        std::cerr << "share failed, Failed to open file: " << filename << std::endl;
+        return;
     }
     std::string content;
     char ch;
     while (source_file.get(ch)) {
         content += ch;
     }
-
+    std::cout << "4" << std::endl;
+    
     // Decrypt and re-encrypt the file content
     auto decryptedContent = rsa_decrypt(content, currentUser);
     auto encryptedContent = rsa_encrypt(decryptedContent, username);
@@ -368,7 +371,7 @@ void share(const std::string& filename, const std::string& username)
     std::ofstream ofs(full_target_path.generic_string(), std::ios::trunc);
     ofs << encryptedContent;
     if (!ofs) {
-        std::cerr << "Share file failed. Failed to write to file: " << full_target_path << std::endl;
+        std::cerr << "share failed, failed to write to file: " << full_target_path << std::endl;
         return;
     }
 
@@ -380,20 +383,24 @@ mkfile - create a new text file
 */
 void mkfile(const std::string& filename, std::string content) {
     // input validation
+    if (content.empty()) {
+        std::cout << "mkfile failed, file content cannot be empty" << std::endl;
+        return;
+    }
     if (filename.empty() || filename.length() > FILENAME_MAX_LEN) 
     {
-        std::cout << "Invaid file name, please check user manual" << std::endl;
+        std::cout << "mkfile failed, Invaid file name, please check user manual" << std::endl;
         return;
     }
     for (const char c : filename) 
     {
-        if (!isalnum(c) && c != '_' && c != '-' && c != '.' && c != '=') {
-            std::cout << "Invaid file name, please check user manual" << std::endl;
+        if (!isalnum(c) && c != '_' && c != '-' && c != '.') {
+            std::cout << "mkfile failed, Invaid file name, please check user manual" << std::endl;
             return;
         }
     }
     if (content.length() > FILECONTENT_MAX_LEN) {
-        std::cout << "Content too long, file content should not exceed " << FILECONTENT_MAX_LEN << " bytes." << std::endl;
+        std::cout << "mkfile failed, content too long, file content should not exceed " << FILECONTENT_MAX_LEN << " bytes." << std::endl;
         return;
     }
     
@@ -405,19 +412,24 @@ void mkfile(const std::string& filename, std::string content) {
         locPath = removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR);
         filePath = removePrefix(canonicalFile.u8string(), FILE_SYSTEM_ROOT_PATH_STR);
     } catch (int error) {
-        std::cout << "Can't create file here" << std::endl;
+        std::cout << "mkfile failed, can't create file here" << std::endl;
         return;
     }
 
+    // Should only create files under filesystem/<user>/personal
     auto relPath = split(locPath, '/');
+    if (relPath.size() < 2) {
+        std::cout << "mkfile failed, can't create file here" << std::endl;
+        return;
+    }
     auto user = encrypt_decrypt(relPath[0]);
     auto folderName = encrypt_decrypt(relPath[1]);
-    // Should only create files under filesystem/<user>/personal
     if (user.empty() || user !=  currentUser || folderName.empty() || folderName == "shared") {
-        std::cout << "Can't create file here" << std::endl;
+        std::cout << "mkfile failed, can't create file here" << std::endl;
         return;
     }
 
+    std::cout << "1" << std::endl;
     // Encrypt filename and content
     std::string filenameEnc;
     std::string cypher;
@@ -425,14 +437,14 @@ void mkfile(const std::string& filename, std::string content) {
         filenameEnc = encrypt_decrypt(filename);
         cypher = rsa_encrypt(content, currentUser);
     } catch (const std::exception& e) {
-        std::cout << "mkfile failed. Exception in encrypt: " << e.what() << std::endl;
+        std::cout << "mkfile failed, Exception in encrypt: " << e.what() << std::endl;
         return;
     }
     
     // Create and write to file
     std::ofstream file(currentPath / filenameEnc, std::ofstream::trunc);
     if (!file.is_open()) {
-        std::cout << "Failed to create file" << std::endl;
+        std::cout << "mkfile failed, failed to create file" << std::endl;
         return;
     }
     file << cypher;
