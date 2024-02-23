@@ -53,7 +53,34 @@ bool checkFileameUsernameValid(const std::string& name) {
     return true;
 }
 
+bool has_write_permission() {
+    // get the current location path
+    std::string locPath;
+    try {
+        locPath = removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR);
+    } catch (int error) {
+        return false;
+    }
+    
+    // check if user/admin is allowed to write things under current directory
+    // user/admin should only write things under filesystem/<username>/personal
+    auto relpath = split(locPath,'/');
+    if (relpath.size() < 2) {
+        return false;
+    }
+    auto owner = encrypt_decrypt(relpath[0]);
+    if(owner.empty() || owner != currentUser) {
+        return false;
+    }
 
+    auto expectHomeDir = encrypt_decrypt(relpath[1]);
+    if(expectHomeDir.empty() or expectHomeDir != "personal") {
+        return false;
+    } 
+    return true;
+}
+
+/*commands function*/
 /* 
 pwd - print current path
 */
@@ -150,35 +177,13 @@ void mkdir(const std::string& dirname)
         std::cout << "mkdir failed, Invaid path, please check user manual" << std::endl;
         return;
     }
-    
-    // get the current location path and the target directory to create
-    std::string locPath;
-    auto canonicalDir = std::filesystem::weakly_canonical(currentPath / dirname);
-    std::string targetDir;
-    try {
-        locPath = removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR);
-        targetDir = removePrefix(canonicalDir.u8string(), FILE_SYSTEM_ROOT_PATH_STR);
-    } catch (int error) {
-        std::cout << "mkdir failed, Can't create dir here" << std::endl;
-        return;
-    }
-    
-    // check if user is allowed to mkdir under current directory
-    // user should only mkdir under filesystem/<username>/personal
-    auto relpath = split(locPath,'/');
-    auto userOfLoc = encrypt_decrypt(relpath[0]);
-    if(userOfLoc.empty() || userOfLoc != currentUser || relpath.size() < 2) {
-        std::cout << "mkdir failed, Can't create dir here" << std::endl;
-        return;
+
+    if (!has_write_permission()) {
+       std::cout << "mkdir failed, Can't create dir here" << std::endl;
+        return; 
     }
 
-    auto expectHomeDir = encrypt_decrypt(relpath[1]);
-    if(expectHomeDir.empty() or expectHomeDir != "personal") {
-        std::cout << "mkdir failed, Can't create dir here" << std::endl;
-        return;
-    }    
-
-    std::string dirname_enc, user_enc, share_enc;
+    std::string dirname_enc;
     try {
         dirname_enc = encrypt_decrypt(dirname);
     }
@@ -216,7 +221,6 @@ void ls()
     for (const auto& item : std::filesystem::directory_iterator(currentPath))
     {
         std::string file = item.path().filename();
-        // TODO hide private_keys and metadata
         if (file == ".metadata" || file == ".private_keys") {
             continue;
         }
@@ -243,7 +247,7 @@ void cat(const std::string& filename) {
 
     auto relPaths = split(locPath, '/');
     if (relPaths.size() < 2) {
-        std::cout << "cat failed." << std::endl;
+        std::cout << "cat failed" << std::endl;
         return;
     }
     std::string owner = encrypt_decrypt(relPaths[0]); 
@@ -257,7 +261,7 @@ void cat(const std::string& filename) {
             std::cout << rsa_decrypt(buffer.str(), owner) << std::endl;
         }
         catch (const std::exception& e) {
-            std::cout << "cat failed. Exception in decrypt: " << e.what() << std::endl;
+            std::cout << "cat failed, Exception in decrypt: " << e.what() << std::endl;
         }
         file.close();
     }
@@ -273,7 +277,7 @@ adduser - create a new user
 void adduser(const std::string& username){
 
     if (!isAdmin) {
-        std::cout << "adduser failed, Invaid command, please check user manual" << std::endl;
+        std::cout << "Invaid command, please check user manual" << std::endl;
         return;
     }
     if (!checkFileameUsernameValid(username)) {
@@ -301,24 +305,9 @@ void share(const std::string& filename, const std::string& username)
         std::cout << "share failed, Invaid filename" << std::endl;
         return;
     }
-    std::string locPath;
-    try {
-        locPath = removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR);
-    } catch (int error) {
-        std::cout << "share failed, can't share file here" << std::endl;
-        return;
-    }
-    auto relPath = split(locPath, '/');
-    if (relPath.size() < 2) {
-        std::cout << "share failed, can't share file here" << std::endl;
-        return;
-    }
-    auto userOfFile = encrypt_decrypt(relPath[0]);
-    auto folderName = encrypt_decrypt(relPath[1]);
-    // Should only create files under filesystem/<user>/personal
-    if (userOfFile.empty() || userOfFile !=  currentUser || folderName.empty() || folderName == "shared") {
-        std::cout << "share failed, can't share file here" << std::endl;
-        return;
+    if (!has_write_permission()) {
+       std::cout << "share failed, Can't share file here" << std::endl;
+        return; 
     }
     
     auto fullFilePath = currentPath / encrypt_decrypt(filename);                          
@@ -385,30 +374,9 @@ void mkfile(const std::string& filename, std::string content) {
         std::cout << "mkfile failed, content too long, file content should not exceed " << FILECONTENT_MAX_LEN << " bytes." << std::endl;
         return;
     }
-    
-    // get the current location path and the target file path to create
-    std::string locPath;
-    auto canonicalFile = std::filesystem::weakly_canonical(currentPath / filename);
-    std::string filePath;
-    try {
-        locPath = removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR);
-        filePath = removePrefix(canonicalFile.u8string(), FILE_SYSTEM_ROOT_PATH_STR);
-    } catch (int error) {
-        std::cout << "mkfile failed, can't create file here" << std::endl;
-        return;
-    }
-
-    // Should only create files under filesystem/<user>/personal
-    auto relPath = split(locPath, '/');
-    if (relPath.size() < 2) {
-        std::cout << "mkfile failed, can't create file here" << std::endl;
-        return;
-    }
-    auto user = encrypt_decrypt(relPath[0]);
-    auto folderName = encrypt_decrypt(relPath[1]);
-    if (user.empty() || user !=  currentUser || folderName.empty() || folderName == "shared") {
-        std::cout << "mkfile failed, can't create file here" << std::endl;
-        return;
+    if (!has_write_permission()) {
+       std::cout << "mkfile failed, Can't create file here" << std::endl;
+        return; 
     }
 
     // Encrypt filename and content
