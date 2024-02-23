@@ -88,7 +88,7 @@ void prompt()
                 size_t contentStart = cmd.find_first_of('"');
                 size_t contentEnd = cmd.find_last_of('"');
                 if (contentStart == std::string::npos || contentStart == contentEnd || contentEnd != cmd.size()-1) {
-                    std::cout << "invalid argument, check user manual" << std::endl;
+                    std::cout << "invalid argument, quote file content with double quotes, check user manual for details" << std::endl;
                     continue;
                 }
                 std::string new_arg = strip(cmd.substr(0, contentStart-1));

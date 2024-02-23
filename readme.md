@@ -1,5 +1,15 @@
 # CMPT785 - Build it Break it Fix it project
 
+## Group Member
+- Hugh Song
+- Yanfei Wang (apphiaWang)
+- Anmol Malhotra
+- Rithik Agarwal
+- Aastha Jha
+
+## User Manual
+TBD
+
 ## Requirements
 ### User Features
 * `cd <directory>`   -  The user provides the directory to move to. It accepts `.` and `..` as current and parent directories respectively and support changing multiple directories at once (cd ../../dir1/dir2). cd / takes you to the current user’s root directory. If a directory doesn't exist, the user stays in the current directory.
@@ -19,15 +29,8 @@
 * Admin has access to read the entire file system with all user features
 * `adduser <username>`  - This command creates a keyfile called username_keyfile on the host which is used by the user to access the filesystem. If a user with this name already exists, it prints "User <username> already exists"
 
-## Group Member
-- Hugh Song
-- Yanfei Wang (apphiaWang)
-- Anmol Malhotra
-- Rithik Agarwal
-- Aastha Jha
 
 ## System Design
-
 ### Start System
 Compile the filesystem binary
 ```sh
@@ -38,14 +41,14 @@ Enter the file system
 ```sh
 ./filesystem <your_admin_name>
 ```
-	(First time execution: this will create folders and keypairs)   
-	(Normal execution: will do the login verification based on the provide username)
+(First time execution: this will create folders and keypairs)   
+(Normal execution: will do the login verification based on the provide username)
 
-Press ctrl + C to exit the file system. 
+Press ctrl + C or type `exit` command to exit the file system. 
 
 ## Auth part
 public key location: ./public_keys/adminName_public.pem   
-private key location: ./filesystem/private_keys/adminName_private.pem
+private key location: ./filesystem/.private_keys/adminName_private.pem
 
 
 Works are tracked at [Trello](https://trello.com/b/GKl7tSmP/cmpt785-bibifi).
