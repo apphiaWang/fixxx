@@ -15,7 +15,9 @@ auto userRootPath = std::filesystem::current_path() / "filesystem/";
 
 /*** constants ***/
 #define FILENAME_MAX_LEN 20
-#define FILECONTENT_MAX_LEN 4096
+#define USERNAME_MAX_LEN 20
+#define FILECONTENT_MAX_LEN 512
+
 const std::filesystem::path SYSTEM_ROOT_PATH = std::filesystem::current_path();
 const std::string FILE_SYSTEM_ROOT_PATH_STR = (std::filesystem::current_path() / "filesystem/").u8string();
 
@@ -23,23 +25,23 @@ const std::string FILE_SYSTEM_ROOT_PATH_STR = (std::filesystem::current_path() /
 /*
 Utilility functions
 */
-void enterUserHome(const std::string& username)
+void enter_user_home(const std::string& username)
 {
     currentPath = currentPath / encrypt_decrypt(username);
     userRootPath = userRootPath / encrypt_decrypt(username);
 }
 
-bool checkUserExist(const std::string &username) {
+bool check_user_exists(const std::string &username) {
     return std::filesystem::exists(SYSTEM_ROOT_PATH / "filesystem" / encrypt_decrypt(username));
 }
 
 std::string userOfPath(const std::string path){
-    std::string locPath = removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR);
+    std::string locPath = remove_prefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR);
     auto relPaths = split(locPath,'/');
     return encrypt_decrypt(relPaths[0]);
 }
 
-bool checkFileameUsernameValid(const std::string& name) {
+bool check_filename_username_valid(const std::string& name) {
     if (name.empty() || name.length() > FILENAME_MAX_LEN) 
     {
         return false;
@@ -57,7 +59,7 @@ bool has_write_permission() {
     // get the current location path
     std::string locPath;
     try {
-        locPath = removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR);
+        locPath = remove_prefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR);
     } catch (int error) {
         return false;
     }
@@ -90,8 +92,8 @@ void pwd()
     if(currentPath != userRootPath) {
         // remove path before filesystem
         std::string path = isAdmin 
-                            ? removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR) 
-                            : removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR + encrypt_decrypt(currentUser));
+                            ? remove_prefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR) 
+                            : remove_prefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR + encrypt_decrypt(currentUser));
 
         // decrypt paths and print it
         auto pathToBePrintedTokens = split(path, '/');
@@ -173,7 +175,7 @@ mkdir - create a new directory
 void mkdir(const std::string& dirname)
 {
     // input validation
-    if (!checkFileameUsernameValid(dirname)) {
+    if (!check_filename_username_valid(dirname)) {
         std::cout << "mkdir failed, Invaid path, please check user manual" << std::endl;
         return;
     }
@@ -242,7 +244,7 @@ void ls()
 cat - print the content of the file
 */
 void cat(const std::string& filename) {
-    std::string locPath = removePrefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR);
+    std::string locPath = remove_prefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR);
     std::string finalPath = "filesystem/" + locPath + "/" + encrypt_decrypt(filename);
 
     auto relPaths = split(locPath, '/');
@@ -280,11 +282,11 @@ void adduser(const std::string& username){
         std::cout << "Invaid command, please check user manual" << std::endl;
         return;
     }
-    if (!checkFileameUsernameValid(username)) {
+    if (!check_filename_username_valid(username)) {
         std::cout << "adduser failed, Invaid username, please check user manual" << std::endl;
         return;
     }
-    if (checkUserExist(username)) {
+    if (check_user_exists(username)) {
         std::cout << "adduser failed, user already exists." << std::endl;
         return;
     }
@@ -301,7 +303,7 @@ void share(const std::string& filename, const std::string& username)
         std::cout << "share failed, cannot share file with the owner" << std::endl;
         return;
     }
-    if (!checkFileameUsernameValid(filename)) {
+    if (!check_filename_username_valid(filename)) {
         std::cout << "share failed, Invaid filename" << std::endl;
         return;
     }
@@ -323,7 +325,7 @@ void share(const std::string& filename, const std::string& username)
     }
     
     // Check the target user 1. exists 2. is not the currentUser
-    if (!checkUserExist(username)) {
+    if (!check_user_exists(username)) {
         std::cout << "share failed. User "<< username <<" doesn't exist." << std::endl;
         return;
     }
@@ -362,7 +364,7 @@ mkfile - create a new text file
 */
 void mkfile(const std::string& filename, std::string content) {
     // input validation
-    if (!checkFileameUsernameValid(filename)) {
+    if (!check_filename_username_valid(filename)) {
         std::cout << "mkfile failed, Invaid file name, please check user manual" << std::endl;
         return;
     }

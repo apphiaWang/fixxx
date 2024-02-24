@@ -8,9 +8,6 @@
 #include "fileUtils.h"
 #include "stringUtils.h"
 
-#define USERNAME_MAX_LEN 20
-
-
 /* 
 Display current user name and current directory. Wait for user to enter command.
 */
@@ -22,9 +19,21 @@ void prompt()
     {
         std::cout << "CMPT785BIBIFI> ";
         std::getline(std::cin, cmd);
+        if(std::cin.fail())
+        {
+            std::cin.clear();
+            std::cout<<"Error while reading input command"<<std::endl;
+            continue;
+        }
+        if (cmd.size() > FILECONTENT_MAX_LEN + USERNAME_MAX_LEN + 10) {
+            std::cin.clear();
+            std::cout<<"Error while reading input command: command too long"<<std::endl;
+            continue;
+        }
         cmd = strip(cmd);
         if(cmd == "")
         {
+            std::cin.clear();
             continue;
         }
         else if(cmd == "exit") 
@@ -85,16 +94,17 @@ void prompt()
             else if(args[0] == "mkfile")
             {
                 // re-split the command
-                size_t contentStart = cmd.find_first_of('"');
-                size_t contentEnd = cmd.find_last_of('"');
+                auto contentStart = cmd.find_first_of('"');
+                auto contentEnd = cmd.find_last_of('"');
                 if (contentStart == std::string::npos || contentStart == contentEnd || contentEnd != cmd.size()-1) {
                     std::cout << "invalid argument, quote file content with double quotes, check user manual for details" << std::endl;
                     continue;
                 }
-                std::string new_arg = strip(cmd.substr(0, contentStart-1));
+                std::string new_arg = cmd.substr(0, contentStart);
+                auto whiteSpaceEnd = new_arg.find_last_of(' ');
                 auto new_args = split(new_arg, ' ');
                 std::string file_content = cmd.substr(contentStart + 1, contentEnd - contentStart-1);
-                if(new_args.size() != 2)
+                if(whiteSpaceEnd != new_arg.size() - 1 || new_args.size() != 2)
                     std::cout << "invalid argument, check user manual" << std::endl;
                 else
                     mkfile(new_args[1], file_content);
@@ -103,6 +113,7 @@ void prompt()
                 std::cout << "Invalid command" << std::endl;
             }
         }
+        std::cin.clear();
     }
 }
 
@@ -143,10 +154,16 @@ int main(int argc, char* argv[])
         exit(1);
     }
     
+    std::string username = argv[1];
+    if (!check_filename_username_valid(username)) {
+        std::cout << "Invalid username/keyfile name. Max 20 characters. Can only contain 'A-Z','a-z','0-9','-','_','.'." << std::endl;
+        return 0;
+    }
+
     // Init filesystem root folder if not exist
     struct stat st;
     const char *folder_name = "filesystem";
-    	
+
     if (stat(folder_name, &st) == -1) {
         if (errno == ENOENT) {
             init_filesystem(argv[1]);
@@ -164,7 +181,7 @@ int main(int argc, char* argv[])
                 std::cout << "Login succeeded." << std::endl;
                 isAdmin = checkRole(name_prefix);
                 if (!isAdmin) {
-                    enterUserHome(name_prefix);
+                    enter_user_home(name_prefix);
                 }
             } else {
                 std::cout << "Login failed." << std::endl;
