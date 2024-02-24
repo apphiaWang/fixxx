@@ -9,18 +9,25 @@
 #include <iostream>
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 
 #define RSA_KEY_LEN 4096
 #define OFFSET 7
+#define OFFSET2 6
+#define OFFSET3 9
 #define PLAINTEXT_MAX_LEN RSA_KEY_LEN / 8 - 42
 std::string globalString = "!@#$%^&)(^*()&*()(*^%^&$$%#$%^^*&$%#$%^$^&^";
 
 std::string read_seed() {
+
     std::string concatenatedString;
     for (int i = 0; i < 5; ++i) {
         concatenatedString += globalString;
     }
-    return concatenatedString.substr(OFFSET);
+    
+    std::reverse(concatenatedString.begin(), concatenatedString.end()-OFFSET3+OFFSET2-OFFSET);
+    
+    return concatenatedString.substr(concatenatedString.length()/2-OFFSET3+OFFSET2-OFFSET);
 }
 
 std::string encrypt_decrypt(const std::string& text) {
