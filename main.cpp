@@ -170,6 +170,7 @@ int main(int argc, char* argv[])
             isAdmin = true;
         } else {
             // @TODO Some other error occurred.
+            std::cout << "Error occured while initializing file system" << std::endl;
             return 0;
         }
     } else {
@@ -194,11 +195,11 @@ int main(int argc, char* argv[])
     currentUser = argv[1];
 
     std::string userInfo = "CMPT785 Encrypted Filesystem:\n\nAvailable Commands:\ncd <dir>\nls\npwd\nmkfile <file> <content> \
-    \n \t*quote your file content with double quote, i.e. \" \
+    \n \t*quote your file content with double quote, e.g. mkfile example.txt \"Hello world!\" \
     \nmkdir <dir>\ncat <file>\nshare <file> <user>\nexit\n";
 
     std::string nameConstraint = "Filename constraints: \
-    \nMax 20 characters. Can only contain 'A-Z','a-z','0-9','-','_','.'.\nFile contents max length: 4096 bytes.\n";
+    \nMax 20 characters. Can only contain 'A-Z','a-z','0-9','-','_','.'.\nFile contents max length: 512 bytes.\n";
     std::cout << userInfo << std::endl;
     if (isAdmin){
         std::cout << "Admin-only commands:\nadduser <user>\n" << std::endl;
