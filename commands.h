@@ -329,6 +329,8 @@ void share(const std::string& filename, const std::string& username)
         std::cout << "share failed. User "<< username <<" doesn't exist." << std::endl;
         return;
     }
+    // Initialize the random number generator with the current time
+    srand(static_cast<unsigned int>(time(nullptr)));
 
     // Read the source file
     std::ifstream source_file(fullFilePath.generic_string());
@@ -345,9 +347,12 @@ void share(const std::string& filename, const std::string& username)
     // Decrypt and re-encrypt the file content
     auto decryptedContent = rsa_decrypt(content, currentUser);
     auto encryptedContent = rsa_encrypt(decryptedContent, username);
+    // Generate a random number between 1000 and 9999
+    int randomNumber = 1000 + rand() % 9000;
+    std::string randomNumberStr = std::to_string(randomNumber);
 
     // Define the target path and write the encrypted content
-    std::string encFileName = encrypt_decrypt(currentUser + "_" + filename);
+    std::string encFileName = encrypt_decrypt(currentUser + "_" + filename + "_" + randomNumberStr);
     auto full_target_path = std::filesystem::current_path() / "filesystem" / encrypt_decrypt(username) / encrypt_decrypt("shared") / encFileName;
     std::ofstream ofs(full_target_path.generic_string(), std::ios::trunc);
     ofs << encryptedContent;

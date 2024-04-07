@@ -1,1 +1,4 @@
 .vscode
+/filesystem/
+/public_keys/
+fileserver
