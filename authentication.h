@@ -91,7 +91,8 @@ std::string rsa_encrypt(std::string plaintext, std::string username)
     encrypted = (unsigned char*)malloc(RSA_size(private_key));
     encrypted_length = RSA_private_encrypt(data_len, (unsigned char*)plaintext.c_str(), encrypted, private_key, RSA_PKCS1_PADDING);
     if (encrypted_length == -1) {
-        // handle error
+        std::cerr << "Error Occurs during RSA encryption!" << std::endl;
+        std::exit(EXIT_FAILURE);
        
     }
     // 4. Free
@@ -114,7 +115,8 @@ std::string rsa_decrypt(std::string cypher, std::string username)
     snprintf(public_key_path, sizeof(public_key_path), "%s/%s_public.pem", dir_public_path , username.c_str());
     bp_public = BIO_new_file(public_key_path, "r");
     if (!bp_public) {
-        // handle error
+        std::cerr << "Cannot load the public key!" << std::endl;
+        std::exit(EXIT_FAILURE);
       
     }
     public_key = PEM_read_bio_RSAPublicKey(bp_public, nullptr, nullptr, nullptr);
@@ -157,13 +159,15 @@ void generate_key_pair(const std::string& name_prefix) {
     bne = BN_new();
     ret = BN_set_word(bne, e);
     if(ret != 1){
-        // handle error
+        std::cerr << "Cannot generate the public key!" << std::endl;
+        std::exit(EXIT_FAILURE);
     }
 
     r = RSA_new();
     ret = RSA_generate_key_ex(r, bits, bne, NULL);
     if(ret != 1){
-        // handle error
+        std::cerr << "Cannot generate the key!" << std::endl;
+        std::exit(EXIT_FAILURE);
     }
 
     // 2. Save public key
@@ -173,7 +177,8 @@ void generate_key_pair(const std::string& name_prefix) {
     BIO *bp_public = BIO_new_file(public_key_path, "w+");
     ret = PEM_write_bio_RSAPublicKey(bp_public, r);
     if(ret != 1){
-        // handle error
+        std::cerr << "Cannot save the public key!" << std::endl;
+        std::exit(EXIT_FAILURE);
     }
     
     const char *dir_private_path = "filesystem/.private_keys";
@@ -224,7 +229,8 @@ bool validate_login(const std::string& name_prefix, const std::string& data) {
     encrypted = (unsigned char*)malloc(RSA_size(private_key));
     encrypted_length = RSA_private_encrypt(data_len, (unsigned char*)data.c_str(), encrypted, private_key, RSA_PKCS1_PADDING);
     if (encrypted_length == -1) {
-        // handle error
+        std::cerr << "Cannot load the private key!" << std::endl;
+        std::exit(EXIT_FAILURE);
        
     }
 
@@ -234,7 +240,8 @@ bool validate_login(const std::string& name_prefix, const std::string& data) {
     snprintf(public_key_path, sizeof(public_key_path), "%s/%s_public.pem", dir_public_path , name_prefix.c_str());
     bp_public = BIO_new_file(public_key_path, "r");
     if (!bp_public) {
-        // handle error
+        std::cerr << "Cannot load the public key!" << std::endl;
+        std::exit(EXIT_FAILURE);
       
     }
     public_key = PEM_read_bio_RSAPublicKey(bp_public, nullptr, nullptr, nullptr);
