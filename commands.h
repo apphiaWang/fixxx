@@ -98,11 +98,7 @@ void pwd()
         // decrypt paths and print it
         auto pathToBePrintedTokens = split(path, '/');
         for (std::vector<std::string>::iterator it = pathToBePrintedTokens.begin() ; it != pathToBePrintedTokens.end(); ++it) {
-            if(isAdmin && it ==  pathToBePrintedTokens.begin()){
-                std::cout << encrypt_decrypt(*it) + "/";  
-            }else{
-                std::cout << encrypt_decrypt(*it) + "/";
-            }
+            std::cout << encrypt_decrypt(*it) + "/";
         }
     }
     std::cout << std::endl;
