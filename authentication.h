@@ -89,16 +89,30 @@ std::string rsa_encrypt(std::string plaintext, std::string username)
     // 3. Encrypt the data with the private key
     int data_len = plaintext.length();
     encrypted = (unsigned char*)malloc(RSA_size(private_key));
+    if (!encrypted) {
+        std::cerr << "Memory allocation failed!" << std::endl;
+        BIO_free_all(bp_private); // Free allocated resources before exiting
+        std::exit(EXIT_FAILURE);
+    }
+    
     encrypted_length = RSA_private_encrypt(data_len, (unsigned char*)plaintext.c_str(), encrypted, private_key, RSA_PKCS1_PADDING);
     if (encrypted_length == -1) {
         std::cerr << "Error Occurs during RSA encryption!" << std::endl;
+        free(encrypted); // Free allocated memory before exiting
+        BIO_free_all(bp_private);
         std::exit(EXIT_FAILURE);
        
     }
     // 4. Free
     BIO_free_all(bp_private);
-    
-    return std::string((char*)encrypted, encrypted_length);
+        
+    // Convert encrypted data to string for return
+    std::string result(reinterpret_cast<const char*>(encrypted), encrypted_length);
+
+    // Free allocated memory
+    free(encrypted);
+
+    return result;    
 }
 
 std::string rsa_decrypt(std::string cypher, std::string username) {
