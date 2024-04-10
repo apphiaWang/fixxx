@@ -101,37 +101,46 @@ std::string rsa_encrypt(std::string plaintext, std::string username)
     return std::string((char*)encrypted, encrypted_length);
 }
 
-std::string rsa_decrypt(std::string cypher, std::string username)
-{   
-
+std::string rsa_decrypt(std::string cypher, std::string username) {
+    
     BIO *bp_public = nullptr;
     RSA *public_key = nullptr;
     unsigned char *decrypted = nullptr;
     int decrypted_length = 0;
-    
+
     // 1. Load public key
     const char *dir_public_path = "public_keys";
     char public_key_path[256];
-    snprintf(public_key_path, sizeof(public_key_path), "%s/%s_public.pem", dir_public_path , username.c_str());
+    snprintf(public_key_path, sizeof(public_key_path), "%s/%s_public.pem", dir_public_path, username.c_str());
     bp_public = BIO_new_file(public_key_path, "r");
     if (!bp_public) {
         std::cerr << "Cannot load the public key!" << std::endl;
         std::exit(EXIT_FAILURE);
-      
     }
     public_key = PEM_read_bio_RSAPublicKey(bp_public, nullptr, nullptr, nullptr);
 
     // 2. Decrypt the data with the public key
+    decrypted_length = RSA_size(public_key);
     decrypted = (unsigned char*)malloc(decrypted_length);
+    if (!decrypted) {
+        std::cerr << "Memory allocation failed!" << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
+
     decrypted_length = RSA_public_decrypt(RSA_size(public_key), (unsigned char*)cypher.c_str(), decrypted, public_key, RSA_PKCS1_PADDING);
     if (decrypted_length == -1) {
         std::cerr << "Invalid public key!" << std::endl;
+        free(decrypted); // Free allocated memory before exiting
         std::exit(EXIT_FAILURE);
-       
     }
-    // 4. Free
+
+    // 3. Free
     BIO_free_all(bp_public);
-    return std::string((char*)decrypted, decrypted_length);
+
+    // Convert decrypted data to string and return
+    std::string result(reinterpret_cast<const char*>(decrypted), decrypted_length);
+    free(decrypted);
+    return result;
 }
 
 void create_user_dir(const std::string& name) {
