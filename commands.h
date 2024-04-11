@@ -387,7 +387,7 @@ void mkfile(const std::string& filename, std::string content) {
     std::string cypher;
     try {
         filenameEnc = encrypt_decrypt(filename);
-        cypher = rsa_encrypt(content, currentUser);
+        cypher = rsa_encrypt(std::move(content), currentUser);
     } catch (const std::exception& e) {
         std::cout << "mkfile failed, Exception in encrypt: " << e.what() << std::endl;
         return;
@@ -405,7 +405,7 @@ void mkfile(const std::string& filename, std::string content) {
     // reshare file
     std::vector<std::string> receivers;
     receivers = getReceivers(encrypt_decrypt(currentUser), encrypt_decrypt(currentUser + "_" + filename));
-    for (auto receiver : receivers) {
+    for (const auto receiver : receivers) {
         share(filename, encrypt_decrypt(receiver));
     }
 }
