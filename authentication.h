@@ -35,7 +35,7 @@ std::string encrypt_decrypt(const std::string& text) {
     std::string result = text;
 
     for (size_t i = 0; i < text.size(); ++i) {
-        result[i] = text[i] ^ key[i % key.size()];
+        result[i] = text[i] ^ key[i % key.size()] + 128;
     }
 
     return result;
