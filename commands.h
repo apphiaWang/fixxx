@@ -325,8 +325,6 @@ void share(const std::string& filename, const std::string& username)
         std::cout << "share failed. User "<< username <<" doesn't exist." << std::endl;
         return;
     }
-    // Initialize the random number generator with the current time
-    srand(static_cast<unsigned int>(time(nullptr)));
 
     // Read the source file
     std::ifstream source_file(fullFilePath.generic_string());
@@ -343,21 +341,28 @@ void share(const std::string& filename, const std::string& username)
     // Decrypt and re-encrypt the file content
     auto decryptedContent = rsa_decrypt(content, currentUser);
     auto encryptedContent = rsa_encrypt(decryptedContent, username);
-    // Generate a random number between 1000 and 9999
-    int randomNumber = 1000 + rand() % 9000;
-    std::string randomNumberStr = std::to_string(randomNumber);
 
-    // Define the target path and write the encrypted content
-    std::string encFileName = encrypt_decrypt(currentUser + "_" + filename + "_" + randomNumberStr);
-    auto full_target_path = std::filesystem::current_path() / "filesystem" / encrypt_decrypt(username) / encrypt_decrypt("shared") / encFileName;
+    // get suffix
+    std::string encrypted_filename = encrypt_decrypt(filename);
+    auto meta_filepath = remove_prefix(fullFilePath, FILE_SYSTEM_ROOT_PATH_STR);
+    int suffix_num = getFileSuffixNumber(encrypt_decrypt(currentUser), encrypted_filename, meta_filepath, encrypt_decrypt(username));
+    
+    std::string filename_shared = currentUser+":"+filename;
+    if (suffix_num > 0) {
+        filename_shared = filename_shared+"("+std::to_string(suffix_num) +")";
+    }
+    std::string encrypted_filename_shared = encrypt_decrypt(filename_shared);
+
+    auto full_target_path = std::filesystem::current_path() / "filesystem" / encrypt_decrypt(username) / encrypt_decrypt("shared") / encrypted_filename_shared;
     std::ofstream ofs(full_target_path.generic_string(), std::ios::trunc);
     ofs << encryptedContent;
     if (!ofs) {
-        std::cerr << "share failed, failed to write to file: " << full_target_path << std::endl;
+        std::cerr << "share failed, failed to write file " << std::endl;
+        ofs.close();
         return;
     }
-
-    addFileShareMapping(encrypt_decrypt(currentUser), encFileName, encrypt_decrypt(username));
+    // add file share mapping
+    addFileShareMapping(encrypt_decrypt(currentUser), encrypted_filename, meta_filepath, encrypt_decrypt(username), suffix_num);
 }
 
 /*
@@ -402,10 +407,11 @@ void mkfile(const std::string& filename, std::string content) {
     file << cypher;
     file.close();
 
-    // reshare file
+    // find receivers and reshare file
     std::vector<std::string> receivers;
-    receivers = getReceivers(encrypt_decrypt(currentUser), encrypt_decrypt(currentUser + "_" + filename));
-    for (const auto receiver : receivers) {
+    auto meta_filepath = remove_prefix(currentPath / filenameEnc, FILE_SYSTEM_ROOT_PATH_STR);
+    receivers = getReceivers(encrypt_decrypt(currentUser), encrypt_decrypt(filename), meta_filepath);
+    for (const auto &receiver : receivers) {
         share(filename, encrypt_decrypt(receiver));
     }
 }
