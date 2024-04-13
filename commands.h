@@ -337,10 +337,16 @@ void share(const std::string& filename, const std::string& username)
     while (source_file.get(ch)) {
         content += ch;
     }
-    
+
     // Decrypt and re-encrypt the file content
     auto decryptedContent = rsa_decrypt(content, currentUser);
-    auto encryptedContent = rsa_encrypt(decryptedContent, username);
+    std::string encryptedContent;
+    try {
+        encryptedContent = rsa_encrypt(decryptedContent, username);
+    } catch (const std::exception& e) {
+        std::cout << "share file failed, Exception in encrypt: " << e.what() << std::endl;
+        return;
+    }    
 
     // get suffix
     std::string encrypted_filename = encrypt_decrypt(filename);
