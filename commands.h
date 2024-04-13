@@ -91,9 +91,14 @@ void pwd()
     std::cout << "/";
     if(currentPath != userRootPath) {
         // remove path before filesystem
-        std::string path = isAdmin 
-                            ? remove_prefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR) 
-                            : remove_prefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR + encrypt_decrypt(currentUser));
+        std::string path;
+        try {
+            path = isAdmin 
+                    ? remove_prefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR) 
+                    : remove_prefix(currentPath, FILE_SYSTEM_ROOT_PATH_STR + encrypt_decrypt(currentUser));
+        } catch (const std::exception& ex) {
+            std::cerr << "Error occured in pwd, try re-login the system" << std::endl;
+        }
 
         // decrypt paths and print it
         auto pathToBePrintedTokens = split(path, '/');
