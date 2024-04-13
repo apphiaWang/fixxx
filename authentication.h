@@ -274,12 +274,15 @@ bool validate_login(const std::string& name_prefix, const std::string& data) {
     decrypted_length = RSA_public_decrypt(encrypted_length, encrypted, decrypted, public_key, RSA_PKCS1_PADDING);
     if (decrypted_length == -1) {
         std::cerr << "Invalid public key!" << std::endl;
+        free(decrypted);
+        free(encrypted); 
         std::exit(EXIT_FAILURE);
        
     }
 
     // 5. Validate
     result = (data == std::string((char*)decrypted, decrypted_length));
-
+    free(decrypted); 
+    free(encrypted); 
     return result;
 }
